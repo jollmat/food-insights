@@ -1,1 +1,145 @@
 /* You can add global styles to this file, and also import other style files */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import "@ng-select/ng-select/themes/default.theme";
+
+$body_bgcolor: slategrey;
+
+body {
+    font-size: 13px;
+    background-color: $body_bgcolor;
+}
+
+input {
+    font-size: 14px;
+}
+
+ul {
+    li {
+        list-style-type: none;
+
+        &.truncate-text {
+            white-space: nowrap;        /* keep text on one line */
+            overflow: hidden;           /* hide the overflowing text */
+            text-overflow: ellipsis;    /* show "..." at the end */
+            display: block;             /* or inline-block, needed for ellipsis to work */
+            width: 200px;               /* set a width to know where to truncate */
+        }
+
+        &::before {
+           content: "- ";      /* add a dash and space before text */
+        }
+
+        &.separator {
+            color: transparent;
+        }
+    }
+}
+
+.cursor-pointer { cursor: pointer; }
+
+@for $i from 1 through 20 {
+  $p: $i * 5; // 5, 10, 15, ... 100
+
+  .w-#{$p} {
+    width: $p * 1%; // multiply number by percent unit
+  }
+}
+
+.fs-7 {
+    font-size: .9rem !important;
+}
+
+.capitalize-first::first-letter {
+  text-transform: uppercase;
+}
+
+.ng-select {
+  width: 300px;
+  font-size: 14px;
+}
+
+.ng-select .ng-select-container {
+  border-radius: 8px;
+  min-height: 42px;
+}
+
+.ng-select .ng-value {
+  font-weight: 500;
+}
+
+.ng-select.ng-select-opened .ng-select-container {
+  box-shadow: 0 0 0 2px rgba(129, 199, 132, 0.25);
+}
+
+/* Table */
+.table-wrapper {
+  overflow-x: auto; /* enable horizontal scroll */
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  white-space: nowrap;
+
+  &.separator {
+    border-left-color: transparent;
+    border-right-color: transparent;
+    background-color: transparent;
+  }
+}
+
+/* Lock the first column */
+th:first-child,
+td:first-child {
+  position: sticky;
+  left: 0;
+  background: #fff; /* ensure background covers content behind */
+  z-index: 2; /* keep above other cells */
+}
+
+/* Optional: make header row sticky too */
+thead th {
+  position: sticky;
+  top: 0;
+  background: #f1f1f1;
+  z-index: 3;
+}
+
+.nutriscore-grade {
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    border-radius: 10px;
+    cursor: help;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    &.a { background-color: rgb(50, 195, 50); }
+    &.b { background-color: gold; }
+    &.c { background-color: orange; }
+    &.d { background-color: orange; }
+    &.e { background-color: rgb(236, 67, 67); }
+
+    &.td-content {
+        position: relative;
+        top: 0px;
+        margin-left: auto;
+        right: 0px;
+    }
+}
+
+.transparent { opacity: 0; }
+.transparent_0_1 { opacity: .1; }
+.transparent_0_2 { opacity: .2; }
+.transparent_0_3 { opacity: .3; }
+.transparent_0_4 { opacity: .4; }
+.transparent_0_5 { opacity: .5; }
+.transparent_0_6 { opacity: .6; }
+.transparent_0_7 { opacity: .7; }
+.transparent_0_8 { opacity: .8; }
+.transparent_0_9 { opacity: .9; }

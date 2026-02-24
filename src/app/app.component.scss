@@ -1,0 +1,228 @@
+$sticky_top_bg_color: #565e64;
+$scanner_container_bg_color: lightgray;
+$card_item_img_bg: white;/*#565e64;*/
+$card_item_compared_bg: #f5f4ca;
+$product_fount_container_bg: white;
+$modal-body-footer-bg: #565e64;
+
+.app-container {
+    height: 100vh;
+    .app {
+        &.desktop {
+            max-width: 1100px;
+            min-width: 800px;
+            border-left: 1px solid #ccc;
+            border-right: 1px solid #ccc;
+        }
+        &.mobile {
+            width:100%;
+        }
+    }
+}
+
+.container-flex {
+  display: flex;
+  flex-wrap: wrap; /* ✅ permite que los elementos salten a una nueva línea */
+  gap: 1rem;       /* espacio entre tarjetas */
+  justify-content: center;
+}
+
+.capitalize-first::first-letter {
+  text-transform: uppercase;
+}
+
+.sticky-top {
+    position: sticky;
+    top:0px;
+    background-color: $sticky_top_bg_color;
+    border-bottom: 1px solid #ccc;
+    &.scanner-on {
+        background-color: transparent;
+    }
+}
+
+.sticky-th-top {
+    position: sticky;
+    top:0px;
+    background-color: #565e64;
+    border-bottom: 1px solid #ccc;
+    color: #fff
+}
+
+.header-like {
+    background-color: slategrey !important;
+    color: white;
+    div {
+        opacity: .6;
+    }
+}
+
+.card-item {
+  /* flex: 1 1 250px;*/ /* crece, se encoge y ocupa al menos 250px */
+  width: 24.4% !important;
+
+  &.LIST {
+    width: 99% !important;
+  }
+
+  &.compared {
+    background-color: $card_item_compared_bg;
+    img {
+        background-color: $card_item_compared_bg;
+    }
+  }
+
+  img {
+    height: 100px;
+    max-width: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    padding: 15px;
+    border: 1px solid transparent;
+    background-color: $card_item_img_bg;
+  }
+
+  .card-title {
+    font-size: 18px;
+    &:hover {
+        text-decoration: underline;
+    }
+  }
+
+  .card-actions {
+    border-top: 1px solid #ccc;
+  }
+
+  &.w-100 { width: 100% !important; }
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.btn-group {
+    button { width: fit-content; }
+}
+
+.semi-transparent {
+    opacity: .1;
+    background-color: gray;
+    pointer-events: none;
+
+    &.sort-container {
+        background-color: white !important;
+    }
+}
+
+.scanner-container {
+    border: 3px solid $scanner_container_bg_color;
+    border-radius: 4px;
+    background-color: $scanner_container_bg_color;
+
+    &.product-found {
+        border-radius: 4px 4px 0 0;
+    }
+}
+
+.product-found-container {
+    background-color: $product_fount_container_bg;
+}
+
+.barcode-input {
+    border-top: 1px solid $scanner_container_bg_color;
+    border-left: 1px solid $scanner_container_bg_color;
+    border-bottom: 1px solid $scanner_container_bg_color;
+}
+
+.text-truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;          /* Limit to 3 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* 👇 Minimum height = 3 lines of text */
+  min-height: calc(1.5em * 3);    /* 1.5em line-height × 3 lines */
+  line-height: 1.5;               /* Adjust line spacing if needed */
+}
+
+.comparison-alert {
+    border-radius: 0px;
+}
+
+#comparatorModal .modal-dialog {
+  max-width: 90vw; /* 90% of viewport width */
+}
+#productModal .modal-dialog {
+  max-width: 75vw; /* 90% of viewport width */
+}
+
+.modal-header {
+    background-color: $modal-body-footer-bg;
+    color: white;
+    .nutriscore-grade {
+        font-size: 22px;
+        position: relative;
+        top: 0px;
+        left: 0px;
+        height: 30px;
+        border-radius: 20px;
+        width: 30px;
+    }
+
+    .fa-close {
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+    }
+}
+
+.modal-body {
+    overflow: auto;
+    background-color: slategrey;
+
+    table {
+        background-color: transparent;
+        thead {
+            tr {
+                background-color: transparent;
+                th {
+                    background-color: slategrey;
+                }
+            }
+        }
+        tbody {
+            tr {
+                background-color: transparent;
+                td {
+                    background-color: white;
+                    &.separator {
+                        background-color: #565e64;
+                        &.transparent {
+                            background-color: transparent;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.modal-footer {
+    background-color: $modal-body-footer-bg;
+}
+
+.comparation-ingredients-chart-container {
+    border-left: 1px solid #ccc;
+}
+
+.chart-container {
+    background-color: #ffffff;
+}
+
+.menu-container {
+
+}
