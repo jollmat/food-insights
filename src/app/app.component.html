@@ -188,8 +188,8 @@
 <!-- Detail Modal -->
 <div class="modal fade" tabindex="-1" id="productModal" #productModal>
   <div class="modal-dialog {{deviceType}}">
-    <div class="modal-content">
-      <div class="modal-header">
+    <div class="modal-content {{deviceType}}">
+      <div class="modal-header {{deviceType}}">
         <div class="d-flex justify-content-between align-items-center w-100">
           <h5 class="modal-title text-truncate capitalize-first pe-2" [title]="selectedProduct?.product_name ? capitalizeFirst(selectedProduct?.product_name) : capitalizeFirst(selectedProduct?.brands)">{{selectedProduct?.product_name || selectedProduct?.brands}}</h5>
           <div class="d-flex justify-content-end align-items-center gap-1">
@@ -200,7 +200,7 @@
           </div>
         </div>
       </div>
-      <div class="modal-body" style="max-height: calc(100vh - 200px);" [ngClass]="{'p-0': deviceType==='mobile'}">
+      <div class="modal-body {{deviceType}}" [ngClass]="{'p-0': deviceType==='mobile'}">
         <ng-container *ngIf="selectedProduct">
 
           <!-- No mobile -->
@@ -534,7 +534,7 @@
 
         </ng-container>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer {{deviceType}}">
         <button class="btn btn-secondary" (click)="closeModal();selectedProduct=undefined;">Close</button>
       </div>
     </div>
@@ -544,7 +544,7 @@
 <!-- Comparator Modal -->
 <div class="modal fade" tabindex="-1" id="comparatorModal" #comparatorModal>
   <div class="modal-dialog">
-    <div class="modal-content">
+    <div class="modal-content {{deviceType}}">
       <div class="modal-header">
         <div class="d-flex justify-content-between align-items-center w-100">
           <h5 class="modal-title">{{selectedProducts.length}} products</h5>

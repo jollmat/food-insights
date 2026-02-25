@@ -1,0 +1,13 @@
+BUILD
+------
+
+ng build --configuration production --base-href "/food-insights/"
+
+DEPLOY
+------
+
+mv dist/food-insights/browser/* dist/food-insights/   
+
+rmdir dist/food-insights/browser     
+
+npx angular-cli-ghpages --dir=dist/food-insights
