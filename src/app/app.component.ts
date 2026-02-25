@@ -48,6 +48,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   barcodeInputDebounceSubscription?: Subscription;
   searchInputDebounceSubscription?: Subscription;
+  fetchProductsSubscription?: Subscription;
+  saveProductsSubscription?: Subscription;
 
   openFoodFactsLoadProductSubscription?: Subscription;
   
@@ -185,16 +187,19 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   addProduct() {
     if (this.productFound && !this.products.some((_product) => _product._id===this.productFound?._id)) {
       this.products.push(this.productFound);
-      localStorage.setItem(this.STORED_PRODUCTS_LS_KEY, JSON.stringify(this.products));
-      this.toggleScanner();
-      this.productFound = undefined;
-      this.barcode = '';
+      //localStorage.setItem(this.STORED_PRODUCTS_LS_KEY, JSON.stringify(this.products));
+      this.saveProductsSubscription = this.openFoodFactsService.saveStoredProducts(this.products).subscribe((saved) => {
+        this.toggleScanner();
+        this.productFound = undefined;
+        this.barcode = '';
+      });
     }
   }
 
   removeProduct(productId: string) {
     this.products = this.products.filter((_product) => _product._id!==productId);
-    localStorage.setItem(this.STORED_PRODUCTS_LS_KEY, JSON.stringify(this.products));
+    //localStorage.setItem(this.STORED_PRODUCTS_LS_KEY, JSON.stringify(this.products));
+    this.saveProductsSubscription = this.openFoodFactsService.saveStoredProducts(this.products).subscribe(() => {});
   }
 
   async viewProduct(product: OpenFoodFactsProduct) {
@@ -270,37 +275,37 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         {
           type: 'column',
           name: 'Fat (gr)',
-          data: [this.selectedProduct?this.selectedProduct.nutriments.fat_100g : 0]
+          data: [this.selectedProduct && this.selectedProduct.nutriments && this.selectedProduct.nutriments.fat_100g?this.selectedProduct.nutriments.fat_100g : 0]
         },
         {
           type: 'column',
           name: 'Satured Fat (gr)',
-          data: [this.selectedProduct?this.selectedProduct.nutriments['saturated-fat_100g'] : 0]
+          data: [this.selectedProduct && this.selectedProduct.nutriments && this.selectedProduct.nutriments['saturated-fat_100g']?this.selectedProduct.nutriments['saturated-fat_100g'] : 0]
         },
         {
           type: 'column',
           name: 'Salt (gr)',
-          data: [this.selectedProduct?this.selectedProduct.nutriments.salt_100g : 0]
+          data: [this.selectedProduct && this.selectedProduct.nutriments && this.selectedProduct.nutriments.salt_100g?this.selectedProduct.nutriments.salt_100g : 0]
         },
         {
           type: 'column',
           name: 'Sodium (gr)',
-          data: [this.selectedProduct?this.selectedProduct.nutriments.sodium_100g : 0]
+          data: [this.selectedProduct && this.selectedProduct.nutriments && this.selectedProduct.nutriments.sodium_100g?this.selectedProduct.nutriments.sodium_100g : 0]
         },
         {
           type: 'column',
           name: 'Sugars (gr)',
-          data: [this.selectedProduct?this.selectedProduct.nutriments.sugars_100g : 0]
+          data: [this.selectedProduct && this.selectedProduct.nutriments && this.selectedProduct.nutriments.sugars_100g?this.selectedProduct.nutriments.sugars_100g : 0]
         },
         {
           type: 'column',
           name: 'Carbohydrates (gr)',
-          data: [this.selectedProduct?this.selectedProduct.nutriments.carbohydrates_100g : 0]
+          data: [this.selectedProduct && this.selectedProduct.nutriments && this.selectedProduct.nutriments.carbohydrates_100g?this.selectedProduct.nutriments.carbohydrates_100g : 0]
         },
         {
           type: 'column',
           name: 'Proteins (gr)',
-          data: [this.selectedProduct?this.selectedProduct.nutriments.proteins_100g : 0]
+          data: [this.selectedProduct && this.selectedProduct.nutriments && this.selectedProduct.nutriments.proteins_100g?this.selectedProduct.nutriments.proteins_100g : 0]
         }
       ],
       credits: { enabled: false }
@@ -376,7 +381,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           name: 'Ingredients',
           type: 'pie',
           data: (this.selectedProduct?.ingredients)? this.selectedProduct?.ingredients.map((_ingredient) => {
-            return { name: this.capitalizeFirst(_ingredient.text.trim().replace(/\b[a-z]{2}:/g, "").replace(/_/g, " ")), y: _ingredient.percent_estimate }
+            return { name: this.capitalizeFirst((_ingredient.text || '').trim().replace(/\b[a-z]{2}:/g, "").replace(/_/g, " ")), y: _ingredient.percent_estimate }
           }):[]
         }
       ],
@@ -396,37 +401,37 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         {
           type: 'column',
           name: 'Fat (gr)',
-          data: this.selectedProducts.map((_p) => _p.nutriments.fat_100g || 0)
+          data: this.selectedProducts.map((_p) => _p.nutriments?.fat_100g || 0)
         },
         {
           type: 'column',
           name: 'Satured Fat (gr)',
-          data: this.selectedProducts.map((_p) => _p.nutriments['saturated-fat_100g'] || 0)
+          data: this.selectedProducts.map((_p) => (_p.nutriments && _p.nutriments['saturated-fat_100g'])? _p.nutriments['saturated-fat_100g'] : 0)
         },
         {
           type: 'column',
           name: 'Salt (gr)',
-          data: this.selectedProducts.map((_p) => _p.nutriments.salt_100g || 0)
+          data: this.selectedProducts.map((_p) => _p.nutriments?.salt_100g || 0)
         },
         {
           type: 'column',
           name: 'Sodium (gr)',
-          data: this.selectedProducts.map((_p) => _p.nutriments.sodium_100g || 0)
+          data: this.selectedProducts.map((_p) => _p.nutriments?.sodium_100g || 0)
         },
         {
           type: 'column',
           name: 'Sugars (gr)',
-          data: this.selectedProducts.map((_p) => _p.nutriments.sugars_100g || 0)
+          data: this.selectedProducts.map((_p) => _p.nutriments?.sugars_100g || 0)
         },
         {
           type: 'column',
           name: 'Carbohydrates (gr)',
-          data: this.selectedProducts.map((_p) => _p.nutriments.carbohydrates_100g || 0)
+          data: this.selectedProducts.map((_p) => _p.nutriments?.carbohydrates_100g || 0)
         },
         {
           type: 'column',
           name: 'Proteins (gr)',
-          data: this.selectedProducts.map((_p) => _p.nutriments.proteins_100g || 0)
+          data: this.selectedProducts.map((_p) => _p.nutriments?.proteins_100g || 0)
         }
       ],
       credits: { enabled: false }
@@ -453,13 +458,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           size: '22%',
           center: (idx===0)?['25%', '50%']:['75%', '50%'],
           data: [
-            ['Fat', _product.nutriments.fat_100g || 0],
-            ['Satured fat', _product.nutriments['saturated-fat_100g'] || 0],
-            ['Salt', _product.nutriments.salt_100g || 0],
-            ['Sodium', _product.nutriments.sodium_100g || 0],
-            ['Sugars', _product.nutriments.sugars_100g || 0],
-            ['Carbohydrates', _product.nutriments.carbohydrates_100g || 0],
-            ['Proteins', _product.nutriments.proteins_100g || 0]
+            ['Fat', _product.nutriments?.fat_100g || 0],
+            ['Satured fat', (_product.nutriments && _product.nutriments['saturated-fat_100g'])? _product.nutriments['saturated-fat_100g'] : 0],
+            ['Salt', _product.nutriments?.salt_100g || 0],
+            ['Sodium', _product.nutriments?.sodium_100g || 0],
+            ['Sugars', _product.nutriments?.sugars_100g || 0],
+            ['Carbohydrates', _product.nutriments?.carbohydrates_100g || 0],
+            ['Proteins', _product.nutriments?.proteins_100g || 0]
           ]
         }
       })
@@ -473,7 +478,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedProducts.forEach((_product, idx) => {
       this.chartOptions.multipleProductIngredients.push({
         built: true,
-        options: (_product.ingredients?.length>0)?{
+        options: (_product.ingredients && _product.ingredients?.length>0)?{
           chart: { type: 'pie', backgroundColor: '#ffffff' },
           title: { text: '' },
           tooltip: { pointFormat: '{point.percentage:.1f}%</b>' },
@@ -496,7 +501,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               name: 'Ingredients',
               type: 'pie',
               data: (this.selectedProducts[idx].ingredients)? this.selectedProducts[idx].ingredients.map((_ingredient) => {
-                return { name: this.capitalizeFirst(_ingredient.text.trim().replace(/\b[a-z]{2}:/g, "").replace(/_/g, " ")), y: _ingredient.percent_estimate }
+                return { name: this.capitalizeFirst((_ingredient.text || '').trim().replace(/\b[a-z]{2}:/g, "").replace(/_/g, " ")), y: _ingredient.percent_estimate }
               }):[]
             }
           ],
@@ -524,7 +529,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     switch(attributes[0]) {
       case 'nutriscore_grade':
         if (product.nutriscore_grade!=='unknown') {
-          value = `<div class="nutriscore-grade text-uppercase td-content ${product.nutriscore_grade}" title="${this.getNutriscoreText(product.nutriscore_grade)}">${product.nutriscore_grade}</div>`;
+          value = `<div class="nutriscore-grade text-uppercase td-content ${product.nutriscore_grade}" title="${this.getNutriscoreText(product.nutriscore_grade || '')}">${product.nutriscore_grade}</div>`;
         }
         break;
       case 'ingredients':
@@ -666,18 +671,37 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.openFoodFactsLoadProductSubscription) {
-      this.openFoodFactsLoadProductSubscription.unsubscribe();
-    }
-    if (this.barcodeInputDebounceSubscription) {
-      this.barcodeInputDebounceSubscription.unsubscribe();
-    }
-    if (this.searchInputDebounceSubscription) {
-      this.searchInputDebounceSubscription.unsubscribe();
-    }
+    this.openFoodFactsLoadProductSubscription?.unsubscribe();
+    this.barcodeInputDebounceSubscription?.unsubscribe();
+    this.searchInputDebounceSubscription?.unsubscribe();
+    this.fetchProductsSubscription?.unsubscribe();
+    this.saveProductsSubscription?.unsubscribe();
+  }
+
+  getConfiguredProducts(_products: OpenFoodFactsProduct[]) {
+      _products = (_products).map((_p) => {
+        if (!_p.product_name || _p.product_name.trim().length===0) {
+          _p.product_name = (_p.brands && _p.brands.trim().length>0)?_p.brands.trim():'Unknown';
+        }
+        return _p;
+      });
+      return _products;
+  }
+
+  fetchProducts() {
+    this.fetchProductsSubscription = this.openFoodFactsService.fetchStoredProducts().subscribe((_products) => {
+      if (_products) {
+        this.products = this.getConfiguredProducts(_products);
+        this.sortBy(this.sortByField);
+      }
+    });
   }
 
   ngOnInit(): void {
+
+    this.fetchProducts();
+
+    /*
     const storedProductsStr = localStorage.getItem(this.STORED_PRODUCTS_LS_KEY);
     if (storedProductsStr) {
       this.products = (JSON.parse(storedProductsStr) as OpenFoodFactsProduct[]).map((_p) => {
@@ -688,6 +712,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       });
       this.sortBy(this.sortByField);
     }
+    */
+    
 
     this.deviceTypeSubscription = this.deviceService.deviceType$.subscribe((_deviceType) => {
       this.deviceType = _deviceType;
