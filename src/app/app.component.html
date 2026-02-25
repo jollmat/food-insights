@@ -187,7 +187,7 @@
 
 <!-- Detail Modal -->
 <div class="modal fade" tabindex="-1" id="productModal" #productModal>
-  <div class="modal-dialog">
+  <div class="modal-dialog {{deviceType}}">
     <div class="modal-content">
       <div class="modal-header">
         <div class="d-flex justify-content-between align-items-center w-100">
@@ -200,141 +200,338 @@
           </div>
         </div>
       </div>
-      <div class="modal-body" style="max-height: calc(100vh - 200px);">
+      <div class="modal-body" style="max-height: calc(100vh - 200px);" [ngClass]="{'p-0': deviceType==='mobile'}">
         <ng-container *ngIf="selectedProduct">
-          <table class="table table-hover table-sm">
-            <tbody>
-              <tr class="py-2">
-                <td>Brand</td>
-                <td colspan="2" class="text-start"><div class="capitalize-first" [innerHTML]="getProductAttrValue(selectedProduct, ['brands'])"></div></td>
-              </tr>
-              <tr class="py-2">
-                <td>URL</td>
-                <td colspan="2" class="text-start">
-                  <ng-container *ngIf="selectedProduct.link && selectedProduct.link.length>0">
-                    <div style="width: 290px;" class="text-truncate">
-                      <a [title]="selectedProduct.link"  [href]="selectedProduct.link" target="_blank">{{selectedProduct.link}}</a>
+
+          <!-- No mobile -->
+          <ng-container *ngIf="deviceType!=='mobile'">
+            <table class="table table-hover table-sm">
+              <tbody>
+                <tr class="py-2">
+                  <td>Brand</td>
+                  <td colspan="2" class="text-start"><div class="capitalize-first" [innerHTML]="getProductAttrValue(selectedProduct, ['brands'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td>URL</td>
+                  <td colspan="2" class="text-start">
+                    <ng-container *ngIf="selectedProduct.link && selectedProduct.link.length>0">
+                      <div style="width: 290px;" class="text-truncate">
+                        <a [title]="selectedProduct.link"  [href]="selectedProduct.link" target="_blank">{{selectedProduct.link}}</a>
+                      </div>
+                    </ng-container>
+                    <ng-container *ngIf="!selectedProduct.link || selectedProduct.link.length===0">
+                      <span>-</span>
+                    </ng-container>
+                  </td>
+                </tr>
+                <tr class="py-2">
+                  <td>Origin</td>
+                  <td colspan="2" class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['countries'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Packaging</td>
+                  <td colspan="2" class="text-start"><div class="text-truncate" [innerHTML]="getProductAttrValue(selectedProduct, ['packaging'])"></div></td>
+                </tr>
+
+                <tr class="py-2">
+                  <td colspan="3" class="separator transparent"></td>
+                </tr>
+
+                <tr>
+                  <td class="py-2">Fat</td>
+                  <td colspan="2"><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels.fat==='high', 'text-warning':selectedProduct.nutrient_levels.fat==='moderate', 'text-success':selectedProduct.nutrient_levels.fat==='low'}">{{selectedProduct.nutrient_levels.fat?capitalizeFirst(selectedProduct.nutrient_levels.fat):'-'}}</span></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Satured fat</td>
+                  <td colspan="2"><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels['saturated-fat']==='high', 'text-warning':selectedProduct.nutrient_levels['saturated-fat']==='moderate', 'text-success':selectedProduct.nutrient_levels['saturated-fat']==='low'}">{{(selectedProduct.nutrient_levels['saturated-fat'])?capitalizeFirst(selectedProduct.nutrient_levels['saturated-fat']):'-'}}</span></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Salt</td>
+                  <td colspan="2"><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels.salt==='high', 'text-warning':selectedProduct.nutrient_levels.salt==='moderate', 'text-success':selectedProduct.nutrient_levels.salt==='low'}">{{(selectedProduct.nutrient_levels.salt)?capitalizeFirst(selectedProduct.nutrient_levels.salt):'-'}}</span></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Sugars</td>
+                  <td colspan="2"><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels.sugars==='high', 'text-warning':selectedProduct.nutrient_levels.sugars==='moderate', 'text-success':selectedProduct.nutrient_levels.sugars==='low'}">{{(selectedProduct.nutrient_levels.sugars)?capitalizeFirst(selectedProduct.nutrient_levels.sugars):'-'}}</span></td>
+                </tr>
+
+                <tr class="py-2">
+                  <td colspan="3" class="separator transparent"></td>
+                </tr>
+
+                <tr class="py-2">
+                  <td>Ingredients</td>
+                  <td [attr.colspan]="(selectedProduct.ingredients && selectedProduct.ingredients.length>0)?1:2" class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['ingredients'])"></div></td>
+                  <td class="p-0" *ngIf="selectedProduct.ingredients && selectedProduct.ingredients.length>0">
+                    <div class="h-100 w-100 chart-container">
+                      <highcharts-chart
+                        *ngIf="chartOptions.singleProductIngredients.built"
+                        [Highcharts]="Highcharts"
+                        [options]="chartOptions.singleProductIngredients.options"
+                        style="width:100%; max-height:392px; height:100%; display:block;"
+                      ></highcharts-chart>
                     </div>
-                  </ng-container>
-                  <ng-container *ngIf="!selectedProduct.link || selectedProduct.link.length===0">
-                    <span>-</span>
-                  </ng-container>
-                </td>
-              </tr>
-              <tr class="py-2">
-                <td>Origin</td>
-                <td colspan="2" class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['countries'])"></div></td>
-              </tr>
-              <tr class="py-2">
-                <td>Packaging</td>
-                <td colspan="2" class="text-start"><div class="text-truncate" [innerHTML]="getProductAttrValue(selectedProduct, ['packaging'])"></div></td>
-              </tr>
+                  </td>
+                </tr>
+                <tr class="py-2">
+                  <td>Minerals</td>
+                  <td colspan="2" class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['minerals_tags'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Allergens</td>
+                  <td colspan="2" class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['allergens'])"></div></td>
+                </tr>
+                
+                <tr class="py-2">
+                  <td colspan="3" class="separator transparent"></td>
+                </tr>
 
-              <tr class="py-2">
-                <td colspan="3" class="separator transparent"></td>
-              </tr>
-
-              <tr>
-                <td class="py-2">Fat</td>
-                <td colspan="2"><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels.fat==='high', 'text-warning':selectedProduct.nutrient_levels.fat==='moderate', 'text-success':selectedProduct.nutrient_levels.fat==='low'}">{{selectedProduct.nutrient_levels.fat?capitalizeFirst(selectedProduct.nutrient_levels.fat):'-'}}</span></td>
-              </tr>
-              <tr class="py-2">
-                <td>Satured fat</td>
-                <td colspan="2"><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels['saturated-fat']==='high', 'text-warning':selectedProduct.nutrient_levels['saturated-fat']==='moderate', 'text-success':selectedProduct.nutrient_levels['saturated-fat']==='low'}">{{(selectedProduct.nutrient_levels['saturated-fat'])?capitalizeFirst(selectedProduct.nutrient_levels['saturated-fat']):'-'}}</span></td>
-              </tr>
-              <tr class="py-2">
-                <td>Salt</td>
-                <td colspan="2"><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels.salt==='high', 'text-warning':selectedProduct.nutrient_levels.salt==='moderate', 'text-success':selectedProduct.nutrient_levels.salt==='low'}">{{(selectedProduct.nutrient_levels.salt)?capitalizeFirst(selectedProduct.nutrient_levels.salt):'-'}}</span></td>
-              </tr>
-              <tr class="py-2">
-                <td>Sugars</td>
-                <td colspan="2"><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels.sugars==='high', 'text-warning':selectedProduct.nutrient_levels.sugars==='moderate', 'text-success':selectedProduct.nutrient_levels.sugars==='low'}">{{(selectedProduct.nutrient_levels.sugars)?capitalizeFirst(selectedProduct.nutrient_levels.sugars):'-'}}</span></td>
-              </tr>
-
-              <tr class="py-2">
-                <td colspan="3" class="separator transparent"></td>
-              </tr>
-
-              <tr class="py-2">
-                <td>Ingredients</td>
-                <td [attr.colspan]="(selectedProduct.ingredients && selectedProduct.ingredients.length>0)?1:2" class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['ingredients'])"></div></td>
-                <td class="p-0" *ngIf="selectedProduct.ingredients && selectedProduct.ingredients.length>0">
-                  <div class="h-100 w-100 chart-container">
-                    <highcharts-chart
-                      *ngIf="chartOptions.singleProductIngredients.built"
-                      [Highcharts]="Highcharts"
-                      [options]="chartOptions.singleProductIngredients.options"
-                      style="width:100%; max-height:392px; height:100%; display:block;"
-                    ></highcharts-chart>
-                  </div>
-                </td>
-              </tr>
-              <tr class="py-2">
-                <td>Minerals</td>
-                <td colspan="2" class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['minerals_tags'])"></div></td>
-              </tr>
-              <tr class="py-2">
-                <td>Allergens</td>
-                <td colspan="2" class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['allergens'])"></div></td>
-              </tr>
-              
-              <tr class="py-2">
-                <td colspan="3" class="separator transparent"></td>
-              </tr>
-
-              <tr class="py-2">
-                <td class="w-25">Energy (100gr)</td>
-                <td class="w-25 text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.energy_100g', 'nutriments.energy_unit'])"></div></td>
-                <td rowspan="8" class="w-50 p-0">
-                  <div class="h-100 w-100 pt-3 chart-container d-flex flex-column">
-                    <div class="w-100 d-flex justify-content-end pe-3">
-                      <button class="btn btn-sm btn-secondary" (click)="toggleSingleProductNutrimentsAbsRel()">{{(singleProductNutrimentsAbsRel==='ABS'?'%':'gr')}}</button>
+                <tr class="py-2">
+                  <td class="w-25">Energy (100gr)</td>
+                  <td class="w-25 text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.energy_100g', 'nutriments.energy_unit'])"></div></td>
+                  <td rowspan="8" class="w-50 p-0">
+                    <div class="h-100 w-100 pt-3 chart-container d-flex flex-column">
+                      <div class="w-100 d-flex justify-content-end pe-3">
+                        <button class="btn btn-sm btn-secondary" (click)="toggleSingleProductNutrimentsAbsRel()">{{(singleProductNutrimentsAbsRel==='ABS'?'%':'gr')}}</button>
+                      </div>
+                      <highcharts-chart
+                        *ngIf="singleProductNutrimentsAbsRel==='ABS' && chartOptions.singleProductNutriments.built"
+                        [Highcharts]="Highcharts"
+                        [options]="chartOptions.singleProductNutriments.options"
+                        style="width:100%; max-height:392px; height:100%; display:block;"
+                      ></highcharts-chart>
+                      <highcharts-chart
+                        *ngIf="singleProductNutrimentsAbsRel==='REL' && chartOptions.singleProductNutrimentsPercent.built"
+                        [Highcharts]="Highcharts"
+                        [options]="chartOptions.singleProductNutrimentsPercent.options"
+                        style="width:100%; max-height:300px; height:100%; display:block;"
+                      ></highcharts-chart>
                     </div>
-                    <highcharts-chart
-                      *ngIf="singleProductNutrimentsAbsRel==='ABS' && chartOptions.singleProductNutriments.built"
-                      [Highcharts]="Highcharts"
-                      [options]="chartOptions.singleProductNutriments.options"
-                      style="width:100%; max-height:392px; height:100%; display:block;"
-                    ></highcharts-chart>
-                    <highcharts-chart
-                      *ngIf="singleProductNutrimentsAbsRel==='REL' && chartOptions.singleProductNutrimentsPercent.built"
-                      [Highcharts]="Highcharts"
-                      [options]="chartOptions.singleProductNutrimentsPercent.options"
-                      style="width:100%; max-height:300px; height:100%; display:block;"
-                    ></highcharts-chart>
-                  </div>
-                </td>
-              </tr>
-              <tr class="py-2">
-                <td>Fat (100gr)</td>
-                <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.fat_100g', 'nutriments.fat_unit'])"></div></td>
-              </tr>
-              <tr class="py-2">
-                <td>Saturated fat (100gr)</td>
-                <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.saturated-fat_100g', 'nutriments.saturated-fat_unit'])"></div></td>
-              </tr>
-              <tr class="py-2">
-                <td>Salt (100gr)</td>
-                <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.salt_100g', 'nutriments.salt_unit'])"></div></td>
-              </tr>
-              <tr class="py-2">
-                <td>Sodium (100gr)</td>
-                <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.sodium_100g', 'nutriments.sodium_unit'])"></div></td>
-              </tr>
-              <tr class="py-2">
-                <td>Sugars (100gr)</td>
-                <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.sugars_100g', 'nutriments.sugars_unit'])"></div></td>
-              </tr>
-              <tr class="py-2">
-                <td>Carbohydrates (100gr)</td>
-                <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.carbohydrates_100g', 'nutriments.carbohydrates_unit'])"></div></td>
-              </tr>
-              <tr class="py-2">
-                <td>Proteins (100gr)</td>
-                <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.proteins_100g', 'nutriments.proteins_unit'])"></div></td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                </tr>
+                <tr class="py-2">
+                  <td>Fat (100gr)</td>
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.fat_100g', 'nutriments.fat_unit'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Saturated fat (100gr)</td>
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.saturated-fat_100g', 'nutriments.saturated-fat_unit'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Salt (100gr)</td>
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.salt_100g', 'nutriments.salt_unit'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Sodium (100gr)</td>
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.sodium_100g', 'nutriments.sodium_unit'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Sugars (100gr)</td>
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.sugars_100g', 'nutriments.sugars_unit'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Carbohydrates (100gr)</td>
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.carbohydrates_100g', 'nutriments.carbohydrates_unit'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td>Proteins (100gr)</td>
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.proteins_100g', 'nutriments.proteins_unit'])"></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </ng-container>
+          
+          <!-- End No mobile -->
+
+          <!-- Mobile -->
+          <ng-container *ngIf="deviceType==='mobile'">
+            <table class="table table-hover table-sm {{deviceType}}">
+              <tbody>
+                <tr class="title">
+                  <td>Brand</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-start"><div class="capitalize-first" [innerHTML]="getProductAttrValue(selectedProduct, ['brands'])"></div></td>
+                </tr>
+                <tr class="title">
+                  <td>URL</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-start">
+                    <ng-container *ngIf="selectedProduct.link && selectedProduct.link.length>0">
+                      <div style="width: 290px;" class="text-truncate">
+                        <a [title]="selectedProduct.link"  [href]="selectedProduct.link" target="_blank">{{selectedProduct.link}}</a>
+                      </div>
+                    </ng-container>
+                    <ng-container *ngIf="!selectedProduct.link || selectedProduct.link.length===0">
+                      <span>-</span>
+                    </ng-container>
+                  </td>
+                </tr>
+                <tr class="title">
+                  <td>Origin</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['countries'])"></div></td>
+                </tr>
+                <tr class="title">
+                  <td>Packaging</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-start"><div class="text-truncate" [innerHTML]="getProductAttrValue(selectedProduct, ['packaging'])"></div></td>
+                </tr>
+
+                <tr class="py-2">
+                  <td colspan="3" class="separator"></td>
+                </tr>
+
+                <tr class="title">
+                  <td>Fat</td>
+                </tr>
+                <tr>
+                  <td><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels.fat==='high', 'text-warning':selectedProduct.nutrient_levels.fat==='moderate', 'text-success':selectedProduct.nutrient_levels.fat==='low'}">{{selectedProduct.nutrient_levels.fat?capitalizeFirst(selectedProduct.nutrient_levels.fat):'-'}}</span></td>
+                </tr>
+                <tr class="title">
+                  <td>Satured fat</td>
+                </tr>
+                <tr class="py-2">
+                  <td><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels['saturated-fat']==='high', 'text-warning':selectedProduct.nutrient_levels['saturated-fat']==='moderate', 'text-success':selectedProduct.nutrient_levels['saturated-fat']==='low'}">{{(selectedProduct.nutrient_levels['saturated-fat'])?capitalizeFirst(selectedProduct.nutrient_levels['saturated-fat']):'-'}}</span></td>
+                </tr>
+                <tr class="title">
+                  <td>Salt</td>
+                </tr>
+                <tr class="py-2">
+                  <td><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels.salt==='high', 'text-warning':selectedProduct.nutrient_levels.salt==='moderate', 'text-success':selectedProduct.nutrient_levels.salt==='low'}">{{(selectedProduct.nutrient_levels.salt)?capitalizeFirst(selectedProduct.nutrient_levels.salt):'-'}}</span></td>
+                </tr>
+                <tr class="title">
+                  <td>Sugars</td>
+                </tr>
+                <tr class="py-2">
+                  <td><span [ngClass]="{'text-danger':selectedProduct.nutrient_levels.sugars==='high', 'text-warning':selectedProduct.nutrient_levels.sugars==='moderate', 'text-success':selectedProduct.nutrient_levels.sugars==='low'}">{{(selectedProduct.nutrient_levels.sugars)?capitalizeFirst(selectedProduct.nutrient_levels.sugars):'-'}}</span></td>
+                </tr>
+
+                <ng-container *ngIf="selectedProduct.ingredients && selectedProduct.ingredients.length>0">
+                  <tr class="py-2">
+                    <td colspan="3" class="separator"></td>
+                  </tr>
+                  <tr class="title">
+                    <td>Ingredients</td>
+                  </tr>
+                  <tr class="title">
+                    <td class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['ingredients'])"></div></td>
+                  </tr>
+                  <tr class="py-2">
+                    <td class="p-0">
+                      <div class="h-100 w-100 chart-container">
+                        <highcharts-chart
+                          *ngIf="chartOptions.singleProductIngredients.built"
+                          [Highcharts]="Highcharts"
+                          [options]="chartOptions.singleProductIngredients.options"
+                          style="width:100%; max-height:392px; height:100%; display:block;"
+                        ></highcharts-chart>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
+                
+                <tr class="title">
+                  <td>Minerals</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['minerals_tags'])"></div></td>
+                </tr>
+
+                <tr class="title">
+                  <td>Allergens</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-start"><div [innerHTML]="getProductAttrValue(selectedProduct, ['allergens'])"></div></td>
+                </tr>
+                
+                <tr class="py-2">
+                  <td colspan="3" class="separator"></td>
+                </tr>
+
+                <tr class="title">
+                  <td>Energy (100gr)</td>
+                </tr>
+                <tr>
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.energy_100g', 'nutriments.energy_unit'])"></div></td>
+                </tr>
+                <tr class="py-2">
+                  <td class="p-0">
+                    <div class="h-100 w-100 pt-3 chart-container d-flex flex-column">
+                      <div class="w-100 d-flex justify-content-end pe-3">
+                        <button class="btn btn-sm btn-secondary" (click)="toggleSingleProductNutrimentsAbsRel()">{{(singleProductNutrimentsAbsRel==='ABS'?'%':'gr')}}</button>
+                      </div>
+                      <highcharts-chart
+                        *ngIf="singleProductNutrimentsAbsRel==='ABS' && chartOptions.singleProductNutriments.built"
+                        [Highcharts]="Highcharts"
+                        [options]="chartOptions.singleProductNutriments.options"
+                        style="width:100%; max-height:392px; height:100%; display:block;"
+                      ></highcharts-chart>
+                      <highcharts-chart
+                        *ngIf="singleProductNutrimentsAbsRel==='REL' && chartOptions.singleProductNutrimentsPercent.built"
+                        [Highcharts]="Highcharts"
+                        [options]="chartOptions.singleProductNutrimentsPercent.options"
+                        style="width:100%; max-height:300px; height:100%; display:block;"
+                      ></highcharts-chart>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="title">
+                  <td>Fat (100gr)</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.fat_100g', 'nutriments.fat_unit'])"></div></td>
+                </tr>
+
+                <tr class="title">
+                  <td>Saturated fat (100gr)</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.saturated-fat_100g', 'nutriments.saturated-fat_unit'])"></div></td>
+                </tr>
+
+                <tr class="title">
+                  <td>Salt (100gr)</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.salt_100g', 'nutriments.salt_unit'])"></div></td>
+                </tr>
+
+                <tr class="title">
+                  <td>Sodium (100gr)</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.sodium_100g', 'nutriments.sodium_unit'])"></div></td>
+                </tr>
+
+                <tr class="title">
+                  <td>Sugars (100gr)</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.sugars_100g', 'nutriments.sugars_unit'])"></div></td>
+                </tr>
+
+                <tr class="title">
+                  <td>Carbohydrates (100gr)</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.carbohydrates_100g', 'nutriments.carbohydrates_unit'])"></div></td>
+                </tr>
+
+                <tr class="title">
+                  <td>Proteins (100gr)</td>
+                </tr>
+                <tr class="py-2">
+                  <td class="text-end"><div [innerHTML]="getProductAttrValue(selectedProduct, ['nutriments.proteins_100g', 'nutriments.proteins_unit'])"></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </ng-container>
+          <!-- End Mobile -->
+
         </ng-container>
       </div>
       <div class="modal-footer">
