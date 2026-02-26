@@ -127,6 +127,11 @@ ul {
     }
 }
 
+.products-container {
+    overflow-y: auto;
+    height: calc(100vh - 160px);
+}
+
 .product-found-container {
     background-color: $product_fount_container_bg;
 }

@@ -4,9 +4,14 @@
 
 $body_bgcolor: slategrey;
 
+html, body {
+  overflow-y: hidden;
+}
+
 body {
     font-size: 13px;
     background-color: $body_bgcolor;
+    overflow: hidden;
 }
 
 input {
