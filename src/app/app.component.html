@@ -84,7 +84,10 @@
     
     <div class="d-flex flex-column w-100 flex-wrap justify-content-start w-100 p-3 products-container" *ngIf="products.length>0" [ngClass]="{'semi-transparent': scannerOn()}">
 
-      <div class="d-flex flex-wrap justify-content-start w-100 h-100 gap-2">
+      <div class="d-flex flex-wrap justify-content-start w-100 gap-2">
+        <ng-container *ngIf="infoText && infoText.length>0">
+          <div class="badge badge-info p-2 d-flex w-100">{{infoText}}</div>
+        </ng-container>
         <ng-container *ngFor="let p of products">
           <ng-container [ngTemplateOutlet]="productCard" [ngTemplateOutletContext]="{p}"></ng-container>
         </ng-container>
@@ -148,9 +151,24 @@
               <button class="btn btn-sm transparent_0_8">&nbsp;</button>
             </div>
           </ng-container>
+
           <ng-container *ngIf="!selectedRemovalProduct">
-            <button *ngIf="!isCompared(p)" class="btn btn-sm btn-outline-danger" (click)="selectedRemovalProduct=p"><i class="fas fa-trash"></i></button>
-            <button *ngIf="deviceType!=='mobile'" class="btn btn-sm" [disabled]="!isCompared(p) && selectedProducts.length===maxSelectableProducts()" (click)="toggleCompare(p)" [ngClass]="{'btn-secondary':isCompared(p), 'btn-outline-secondary':!isCompared(p)}">{{(isCompared(p))?'No compare':'Compare'}}</button>
+            
+            <div class="d-flex align-items-center justify-content-between w-100">
+              <div class="d-flex justify-content-start align-items-center">
+                <ng-container *ngIf="p.prices?.length>0">
+                  <span class="badge rounded-pill bg-light text-dark price fs-6" (click)="openProductPrices(p)">{{ p.prices[0].price | number:'1.2-2' }}<i  class="fas fa-euro ms-1"></i></span>
+                </ng-container>
+                <ng-container *ngIf="!p.prices || p.prices.length===0">
+                  <span class="badge rounded-pill bg-light text-dark price fs-6" (click)="openProductPrices(p)"><i  class="fas fa-plus"></i>{{(!p.prices)?'No prices':p.prices.length}}</span>
+                </ng-container>
+              </div>
+              <div class="d-flex justify-content-end align-items-center gap-2">
+                <button *ngIf="!isCompared(p)" class="btn btn-sm btn-outline-danger" (click)="selectedRemovalProduct=p"><i class="fas fa-trash"></i></button>
+                <button *ngIf="deviceType!=='mobile'" class="btn btn-sm" [disabled]="!isCompared(p) && selectedProducts.length===maxSelectableProducts()" (click)="toggleCompare(p)" [ngClass]="{'btn-secondary':isCompared(p), 'btn-outline-secondary':!isCompared(p)}">{{(isCompared(p))?'No compare':'Compare'}}</button>
+              </div>
+            </div>
+            
           </ng-container>
         </div>
       </div>
@@ -158,6 +176,57 @@
 </ng-template>
 
 <!-- Bootstrap Modals -->
+
+<!-- Product prices Modal -->
+<div class="modal fade" tabindex="-1" #pricesModal>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header d-flex justify-content-between align-items-center w-100">
+        <h5 class="modal-title capitalize-first">{{selectedProductPrices?.product_name}}</h5>
+        <i class="fas fa-close text-light cursor-pointer fs-2" (click)="closeModal();selectedProductPrices=undefined;"></i>
+      </div>
+      <div class="modal-body p-0">
+        <ng-container *ngIf="selectedProductPrices">
+          <div style="height: 350px;" class="d-flex flex-column w-100">
+              <table class="table table-sm table-border table-hover w-100">
+                <thead>
+                  <tr>
+                    <th>
+                      <div class="d-flex justify-content-start align-items-center cursor-pointer ps-2" (click)="sortPriceBy('date')">
+                        <span [ngClass]="{'text-underline': sortPriceByField==='date'}">Date</span>
+                      </div>
+                    </th>
+                    <th>
+                      <div class="d-flex justify-content-start align-items-center cursor-pointer ps-2" (click)="sortPriceBy('commerceName')">
+                        <span [ngClass]="{'text-underline': sortPriceByField==='commerceName'}">Commerce</span>
+                      </div>
+                    </th>
+                    <th>
+                      <div class="d-flex justify-content-end align-items-center cursor-pointer pe-2" (click)="sortPriceBy('price')">
+                        <span [ngClass]="{'text-underline': sortPriceByField==='price'}">Price</span>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <ng-container *ngFor="let productPrice of selectedProductPrices?.prices">
+                    <tr>
+                      <td class="text-start ps-2">{{productPrice.date | date: 'dd.MM.yyyy - HH:mm'}}</td>
+                      <td class="ps-2">{{productPrice.commerceName}}</td>
+                      <td class="text-end pe-2">{{productPrice.price | number:'1.2-2'}} €</td>
+                    </tr>
+                  </ng-container>
+                </tbody>
+              </table>
+          </div>
+        </ng-container>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal();selectedProductPrices=undefined;">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Scanner Modal -->
 <div class="modal fade" tabindex="-1" #scannerModal>
@@ -197,7 +266,7 @@
             <ng-container *ngIf="selectedProduct && selectedProduct.nutriscore_grade">
               <div class="nutriscore-grade text-uppercase {{selectedProduct.nutriscore_grade}}" [title]="'Nutriscore ' + getNutriscoreText(selectedProduct.nutriscore_grade)" *ngIf="selectedProduct.nutriscore_grade && selectedProduct.nutriscore_grade!=='unknown' && selectedProduct.nutriscore_grade.length===1">{{selectedProduct.nutriscore_grade}}</div>
             </ng-container>
-            <i class="fas fa-close ms-2" (click)="closeModal();selectedProduct=undefined;"></i>
+            <i class="fas fa-close ms-2 fs-2" (click)="closeModal();selectedProduct=undefined;"></i>
           </div>
         </div>
       </div>

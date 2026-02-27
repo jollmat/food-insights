@@ -280,6 +280,22 @@ export interface OpenFoodFactsProduct {
     vitamins_prev_tags?:                                                                any[];
     vitamins_tags?:                                                                     any[];
     weighers_tags?:                                                                     any[];
+
+    prices?:                                                                             ProductPrice[];
+}
+
+export interface ProductPrice {
+    id: string;
+    productId: string;
+    price: number;
+    commerceId: string;
+    commerceName?: string;
+    date: Date;
+}
+
+export interface Commerce {
+    id: string;
+    name: string;
 }
 
 export interface CategoriesProperties {

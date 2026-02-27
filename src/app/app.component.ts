@@ -4,7 +4,7 @@ import { BarcodeScannerComponent } from "./components/barcode-scanner/barcode-sc
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OpenFoodFactsService } from './services/open-food-facts.service';
-import { OpenFoodFactsProduct } from './model/interfaces/open-food-facts-product.interface';
+import { Commerce, OpenFoodFactsProduct, ProductPrice } from './model/interfaces/open-food-facts-product.interface';
 import { debounceTime, distinctUntilChanged, fromEvent, map, min, Subscription } from 'rxjs';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { HighchartsChartModule } from 'highcharts-angular';
@@ -28,12 +28,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('scannerModal') scannerModalElement!: ElementRef<HTMLDivElement>;
   @ViewChild('productModal') productModalElement!: ElementRef<HTMLDivElement>;
   @ViewChild('comparatorModal') comparatorModalElement!: ElementRef<HTMLDivElement>;
+  @ViewChild('pricesModal') pricesModalElement!: ElementRef<HTMLDivElement>;
   modalInstance: any;
+
+  infoText?: string;
 
   deviceType!: DeviceType;
   displayMode: DisplayMode = 'GRID';
 
   deviceTypeSubscription?: Subscription;
+
+  commerces: Commerce[] = [];
 
   // Sort
   sortByItems: { field: string, label: string }[] = [
@@ -43,6 +48,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
   sortByField = this.sortByItems[0].field;
 
+  sortPriceByField = this.sortByItems[0].field;
+  sortPriceByDir: 'asc' | 'desc' = 'asc';
+
   //Search
   searchtext = '';
 
@@ -50,6 +58,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   searchInputDebounceSubscription?: Subscription;
   fetchProductsSubscription?: Subscription;
   saveProductsSubscription?: Subscription;
+  fetchProductPricesSubscription?: Subscription;
 
   openFoodFactsLoadProductSubscription?: Subscription;
   
@@ -68,6 +77,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   selectedProduct?: OpenFoodFactsProduct;
   selectedRemovalProduct?: OpenFoodFactsProduct;
+  selectedProductPrices?: OpenFoodFactsProduct;
 
   selectedProducts: OpenFoodFactsProduct[] = [];
   maxSelectableProducts = signal(4);
@@ -99,6 +109,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.barcodeTemp = newCode;
 
     this.selectBarcode();
+  }
+
+  async openProductPrices(p: OpenFoodFactsProduct) {
+    this.selectedProductPrices = p;
+    const bootstrap = await import('bootstrap');
+    const modal = new bootstrap.Modal(this.pricesModalElement.nativeElement, {
+      backdrop: 'static',
+      keyboard: false
+    });
+    this.modalInstance = modal;
+    modal.show();
   }
 
   async openScanner() {
@@ -670,12 +691,27 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  sortPriceBy(sortAttribute: string) {
+    if (sortAttribute!==this.sortPriceByField) {
+      this.sortPriceByDir = 'asc';
+    } else {
+      this.sortPriceByDir = (this.sortPriceByDir==='asc')? 'desc' : 'asc';
+    }
+    this.sortPriceByField = sortAttribute;
+    if (this.selectedProductPrices) {
+      this.selectedProductPrices.prices?.sort((a, b) => {
+        return JSON.stringify((a as any)[sortAttribute]).trim().toLowerCase() > JSON.stringify((b as any)[sortAttribute]).trim().toLowerCase()?((this.sortPriceByDir==='asc')?1:-1):((this.sortPriceByDir==='asc')?-1:1);
+      });
+    }
+  }
+
   ngOnDestroy(): void {
     this.openFoodFactsLoadProductSubscription?.unsubscribe();
     this.barcodeInputDebounceSubscription?.unsubscribe();
     this.searchInputDebounceSubscription?.unsubscribe();
     this.fetchProductsSubscription?.unsubscribe();
     this.saveProductsSubscription?.unsubscribe();
+    this.fetchProductPricesSubscription?.unsubscribe();
   }
 
   getConfiguredProducts(_products: OpenFoodFactsProduct[]) {
@@ -693,7 +729,36 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       if (_products) {
         this.products = this.getConfiguredProducts(_products);
         this.sortBy(this.sortByField);
+        console.log('Products', this.products);
+        this.fetchPrices();
       }
+    });
+  }
+
+  fetchPrices() {
+    this.infoText = `Fetching prices...`;
+    this.fetchProductPricesSubscription = this.openFoodFactsService.fetchProductPrices().subscribe((_prices) => {
+      this.infoText = `Fetching prices finished`;
+      if (this.products) {
+        this.infoText = `${_prices.length} prices fetched!`;
+        _prices.forEach((_price) => {
+          const commerce = this.commerces.find((_commerce) => _commerce.id===_price.commerceId);
+          _price.commerceName = commerce ? commerce.name : undefined;
+          const product = this.products.find((_product) => _product._id===_price.productId);
+          if (product) {
+            if (product.prices) {
+              product.prices.push(_price);
+            } else {
+              product.prices = [_price];
+            }
+            product.prices = product?.prices?.sort((a,b) => a.price>b.price?1:-1 );
+          }
+        });
+      } else {
+        this.infoText = `No products -> No prices fetched!`;
+      }
+      console.log('Prices', _prices);
+      console.log('Products & prices', this.products);
     });
   }
 
@@ -701,20 +766,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.fetchProducts();
 
-    /*
-    const storedProductsStr = localStorage.getItem(this.STORED_PRODUCTS_LS_KEY);
-    if (storedProductsStr) {
-      this.products = (JSON.parse(storedProductsStr) as OpenFoodFactsProduct[]).map((_p) => {
-        if (!_p.product_name || _p.product_name.trim().length===0) {
-          _p.product_name = (_p.brands && _p.brands.trim().length>0)?_p.brands.trim():'Unknown';
-        }
-        return _p;
-      });
-      this.sortBy(this.sortByField);
-    }
-    */
+    this.commerces = this.openFoodFactsService.getCommerces();
     
-
     this.deviceTypeSubscription = this.deviceService.deviceType$.subscribe((_deviceType) => {
       this.deviceType = _deviceType;
       if (this.deviceType==='mobile') {

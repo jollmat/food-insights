@@ -5,13 +5,13 @@
 $body_bgcolor: slategrey;
 
 html, body {
-  overflow-y: hidden;
+  /*overflow-y: hidden;*/
 }
 
 body {
     font-size: 13px;
     background-color: $body_bgcolor;
-    overflow: hidden;
+    /*overflow-y: hidden;*/
 }
 
 input {
@@ -48,6 +48,10 @@ ul {
   .w-#{$p} {
     width: $p * 1%; // multiply number by percent unit
   }
+}
+
+.text-underline {
+  text-decoration: underline;
 }
 
 .fs-7 {
