@@ -285,12 +285,12 @@ export interface OpenFoodFactsProduct {
 }
 
 export interface ProductPrice {
-    id: string;
-    productId: string;
+    id?: string;
+    productId?: string;
     price: number;
-    commerceId: string;
+    commerceId?: string;
     commerceName?: string;
-    date: Date;
+    date?: Date;
 }
 
 export interface Commerce {

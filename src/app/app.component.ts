@@ -59,7 +59,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   fetchProductsSubscription?: Subscription;
   saveProductsSubscription?: Subscription;
   fetchProductPricesSubscription?: Subscription;
-
+  fetchCommercesSubscription?: Subscription;
   openFoodFactsLoadProductSubscription?: Subscription;
   
   title = 'food-insights';
@@ -99,6 +99,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     multipleProductNutrimentsPercent: { options: {}, built: false }
   };
 
+  newProductPrice?: ProductPrice;
+
   constructor(
     private readonly openFoodFactsService: OpenFoodFactsService,
     private readonly deviceService: DeviceService
@@ -112,6 +114,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async openProductPrices(p: OpenFoodFactsProduct) {
+    console.log('openProductPrices()', p);
     this.selectedProductPrices = p;
     const bootstrap = await import('bootstrap');
     const modal = new bootstrap.Modal(this.pricesModalElement.nativeElement, {
@@ -120,6 +123,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.modalInstance = modal;
     modal.show();
+  }
+
+  async doOpenNewPrice(p: OpenFoodFactsProduct) {
+    console.log('doOpenNewPrice()', p);
+    this.newProductPrice = {
+      date: new Date(),
+      price: 0
+    };
+    this.openProductPrices(p);
   }
 
   async openScanner() {
@@ -705,15 +717,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.openFoodFactsLoadProductSubscription?.unsubscribe();
-    this.barcodeInputDebounceSubscription?.unsubscribe();
-    this.searchInputDebounceSubscription?.unsubscribe();
-    this.fetchProductsSubscription?.unsubscribe();
-    this.saveProductsSubscription?.unsubscribe();
-    this.fetchProductPricesSubscription?.unsubscribe();
-  }
-
   getConfiguredProducts(_products: OpenFoodFactsProduct[]) {
       _products = (_products).map((_p) => {
         if (!_p.product_name || _p.product_name.trim().length===0) {
@@ -739,25 +742,27 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   fetchPrices() {
     this.infoText = `Fetching prices...`;
-    this.fetchProductPricesSubscription = this.openFoodFactsService.fetchProductPrices().subscribe((_prices) => {
+    this.fetchProductPricesSubscription = this.openFoodFactsService.fetchStoredProductPrices().subscribe((_prices) => {
       this.infoText = undefined;
-      if (this.products) {
-        _prices.forEach((_price) => {
-          const commerce = this.commerces.find((_commerce) => _commerce.id===_price.commerceId);
-          _price.commerceName = commerce ? commerce.name : undefined;
-          const product = this.products.find((_product) => _product._id===_price.productId);
-          if (product) {
-            if (product.prices) {
-              product.prices.push(_price);
-            } else {
-              product.prices = [_price];
+      if (_prices && _prices.length>0) {
+        if (this.products) {
+          _prices.forEach((_price) => {
+            const commerce = this.commerces.find((_commerce) => _commerce.id===_price.commerceId);
+            _price.commerceName = commerce ? commerce.name : undefined;
+            const product = this.products.find((_product) => _product._id===_price.productId);
+            if (product) {
+              if (product.prices) {
+                product.prices.push(_price);
+              } else {
+                product.prices = [_price];
+              }
+              product.prices = product?.prices?.sort((a,b) => a.price>b.price?1:-1 );
             }
-            product.prices = product?.prices?.sort((a,b) => a.price>b.price?1:-1 );
-          }
-        });
+          });
+        }
+        console.log('Prices', _prices);
+        console.log('Products & prices', this.products);
       }
-      console.log('Prices', _prices);
-      console.log('Products & prices', this.products);
     });
   }
 
@@ -765,7 +770,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.fetchProducts();
 
-    this.commerces = this.openFoodFactsService.getCommerces();
+    this.fetchCommercesSubscription = this.openFoodFactsService.fetchCommerces().subscribe((_commerces) => {
+      this.commerces = _commerces;
+      console.log('Commerces', this.commerces);
+    });
     
     this.deviceTypeSubscription = this.deviceService.deviceType$.subscribe((_deviceType) => {
       this.deviceType = _deviceType;
@@ -775,5 +783,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.selectedProducts = [];
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.openFoodFactsLoadProductSubscription?.unsubscribe();
+    this.barcodeInputDebounceSubscription?.unsubscribe();
+    this.searchInputDebounceSubscription?.unsubscribe();
+    this.fetchProductsSubscription?.unsubscribe();
+    this.saveProductsSubscription?.unsubscribe();
+    this.fetchProductPricesSubscription?.unsubscribe();
+    this.fetchCommercesSubscription?.unsubscribe();
   }
 }

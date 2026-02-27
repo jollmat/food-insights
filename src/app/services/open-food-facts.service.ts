@@ -9,22 +9,35 @@ import { Commerce, OpenFoodFactsProduct, ProductPrice } from '../model/interface
 export class OpenFoodFactsService {
   private openFoodApiUrl = 'https://world.openfoodfacts.org/api/v2/product';
   private jsonStorageApiKey = 'c9c418a5-5e82-4e6b-98b7-a54cdc753c3d';
-  private jsonStorageApiUrl = `https://api.jsonstorage.net/v1/json/a194f6bb-6aa4-43f3-b7c7-888b963187b2/35d8b5c0-7445-40d2-b2d2-79aa942b4ee4?apiKey=${this.jsonStorageApiKey}`;
+  private jsonStorageProductsApiUrl = `https://api.jsonstorage.net/v1/json/a194f6bb-6aa4-43f3-b7c7-888b963187b2/35d8b5c0-7445-40d2-b2d2-79aa942b4ee4?apiKey=${this.jsonStorageApiKey}`;
+  private jsonStoragePricesApiUrl = `https://api.jsonstorage.net/v1/json/a194f6bb-6aa4-43f3-b7c7-888b963187b2/c6da72a6-b8b0-4790-9556-1fe6fb84d5dc?apiKey=${this.jsonStorageApiKey}`;
+  private jsonStorageCommercesApiUrl = `https://api.jsonstorage.net/v1/json/a194f6bb-6aa4-43f3-b7c7-888b963187b2/61924688-bde2-4fb8-8d55-62d1cae4f958?apiKey=${this.jsonStorageApiKey}`;
 
   constructor(private http: HttpClient) {}
 
-  getCommerces(): Commerce[] {
-    return [
-      {id:'bonpreu', name: 'Bonpreu/Esclat'},
-      {id:'ametller', name: 'Ametller Origen'},
-      {id:'eroski', name: 'Eroski'},
-      {id:'dia', name: 'DIA'},
-      {id:'aldi', name: 'Aldi'},
-      {id:'lidl', name: 'Lidl'},
-    ];
+  fetchCommerces(): Observable<Commerce[]> {
+    return this.http.get<Commerce[]>(`${this.jsonStorageCommercesApiUrl}&t=${Date.now()}`).pipe(
+      map((_commerces) => {
+        console.log(_commerces);
+        return _commerces;
+      }),
+      catchError((e) => {
+        console.log(e);
+        return of([]);
+      })
+    );
   }
 
-  fetchProductPrices(): Observable<ProductPrice[]> {
+  fetchStoredProductPrices(): Observable<ProductPrice[]> {
+    /*
+    return this.http.get<ProductPrice[]>(`${this.jsonStoragePricesApiUrl}&t=${Date.now()}`).pipe(
+      catchError((e) => {
+        console.log(e);
+        return of([]);
+      })
+    );
+    */
+    
     return of([
       {id: crypto.randomUUID(), commerceId: 'bonpreu', productId: '7613036569927', date: new Date(), price: 8.4},
       {id: crypto.randomUUID(), commerceId: 'eroski', productId: '7613036569927', date: new Date(), price: 8.0},
@@ -39,6 +52,7 @@ export class OpenFoodFactsService {
       {id: crypto.randomUUID(), commerceId: 'eroski', productId: '7613036569927', date: new Date(), price: 8.0},
       {id: crypto.randomUUID(), commerceId: 'aldi', productId: '7613036569927', date: new Date(), price: 9.3}
     ]);
+    
   }
 
   /**
@@ -49,19 +63,22 @@ export class OpenFoodFactsService {
     const url = `${this.openFoodApiUrl}/${code}.json`;
     return this.http.get<any>(url).pipe(
       map((res) => res.status === 1 ? this.getSimplifiedProduct(res.product as OpenFoodFactsProduct) : undefined),
-      catchError(() => of(undefined))
+      catchError((e) => {
+        console.log(e);
+        return of(undefined);
+      })
     );
   }
 
   fetchStoredProducts(): Observable<OpenFoodFactsProduct[]> {
-    return this.http.get<OpenFoodFactsProduct[]>(`${this.jsonStorageApiUrl}&t=${Date.now()}`).pipe(
+    return this.http.get<OpenFoodFactsProduct[]>(`${this.jsonStorageProductsApiUrl}&t=${Date.now()}`).pipe(
       map((_products) => _products.map((_product) => this.getSimplifiedProduct(_product))),
       catchError(() => of([]))
     );
   }
 
   saveStoredProducts(products: OpenFoodFactsProduct[]): Observable<boolean> {
-    return this.http.put<OpenFoodFactsProduct[]>(`${this.jsonStorageApiUrl}&t=${Date.now()}`, products.map((_product) => this.getSimplifiedProduct(_product))).pipe(
+    return this.http.put<OpenFoodFactsProduct[]>(`${this.jsonStorageProductsApiUrl}&t=${Date.now()}`, products.map((_product) => this.getSimplifiedProduct(_product))).pipe(
       map(() => true),
       catchError(() => of(false))
     );
