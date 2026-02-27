@@ -725,7 +725,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   fetchProducts() {
+    this.infoText = `Fetching products...`;
     this.fetchProductsSubscription = this.openFoodFactsService.fetchStoredProducts().subscribe((_products) => {
+      this.infoText = undefined;
       if (_products) {
         this.products = this.getConfiguredProducts(_products);
         this.sortBy(this.sortByField);
@@ -738,9 +740,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   fetchPrices() {
     this.infoText = `Fetching prices...`;
     this.fetchProductPricesSubscription = this.openFoodFactsService.fetchProductPrices().subscribe((_prices) => {
-      this.infoText = `Fetching prices finished`;
+      this.infoText = undefined;
       if (this.products) {
-        this.infoText = `${_prices.length} prices fetched!`;
         _prices.forEach((_price) => {
           const commerce = this.commerces.find((_commerce) => _commerce.id===_price.commerceId);
           _price.commerceName = commerce ? commerce.name : undefined;
@@ -754,8 +755,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             product.prices = product?.prices?.sort((a,b) => a.price>b.price?1:-1 );
           }
         });
-      } else {
-        this.infoText = `No products -> No prices fetched!`;
       }
       console.log('Prices', _prices);
       console.log('Products & prices', this.products);
