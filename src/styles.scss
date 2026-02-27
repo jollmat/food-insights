@@ -94,7 +94,7 @@ th, td {
   padding: 8px 16px;
   border: 1px solid #ccc;
   white-space: nowrap;
-
+  
   &.separator {
     border-left-color: transparent;
     border-right-color: transparent;
@@ -103,18 +103,20 @@ th, td {
 }
 
 /* Lock the first column */
+/*
 th:first-child,
 td:first-child {
   position: sticky;
   left: 0;
-  background: #fff; /* ensure background covers content behind */
-  z-index: 2; /* keep above other cells */
+  background: #fff;
+  z-index: 1000;
 }
+*/
 
 /* Optional: make header row sticky too */
 thead th {
   position: sticky;
-  top: 0;
+  top: -2px;
   background: #f1f1f1;
   z-index: 3;
 }

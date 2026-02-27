@@ -28,7 +28,16 @@ export class OpenFoodFactsService {
     return of([
       {id: crypto.randomUUID(), commerceId: 'bonpreu', productId: '7613036569927', date: new Date(), price: 8.4},
       {id: crypto.randomUUID(), commerceId: 'eroski', productId: '7613036569927', date: new Date(), price: 8.0},
-      {id: crypto.randomUUID(), commerceId: 'bonpreu', productId: '7613036569927', date: new Date(), price: 9.3}
+      {id: crypto.randomUUID(), commerceId: 'bonpreu', productId: '8410172652525', date: new Date(), price: 9.3},
+      {id: crypto.randomUUID(), commerceId: 'bonpreu', productId: '7613036569927', date: new Date(), price: 8.4},
+      {id: crypto.randomUUID(), commerceId: 'eroski', productId: '7613036569927', date: new Date(), price: 8.0},
+      {id: crypto.randomUUID(), commerceId: 'bonpreu', productId: '7613036569927', date: new Date(), price: 9.3},
+      {id: crypto.randomUUID(), commerceId: 'bonpreu', productId: '7613036569927', date: new Date(), price: 8.6},
+      {id: crypto.randomUUID(), commerceId: 'eroski', productId: '7613036569927', date: new Date(), price: 8.0},
+      {id: crypto.randomUUID(), commerceId: 'ametller', productId: '8410172652525', date: new Date(), price: 9.1},
+      {id: crypto.randomUUID(), commerceId: 'bonpreu', productId: '7613036569927', date: new Date(), price: 8.4},
+      {id: crypto.randomUUID(), commerceId: 'eroski', productId: '7613036569927', date: new Date(), price: 8.0},
+      {id: crypto.randomUUID(), commerceId: 'aldi', productId: '7613036569927', date: new Date(), price: 9.3}
     ]);
   }
 

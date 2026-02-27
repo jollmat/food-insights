@@ -183,12 +183,12 @@
     <div class="modal-content">
       <div class="modal-header d-flex justify-content-between align-items-center w-100">
         <h5 class="modal-title capitalize-first">{{selectedProductPrices?.product_name}}</h5>
-        <i class="fas fa-close text-light cursor-pointer fs-2" (click)="closeModal();selectedProductPrices=undefined;"></i>
+        <i class="fas fa-close text-light cursor-pointer fs-3" (click)="closeModal();selectedProductPrices=undefined;"></i>
       </div>
       <div class="modal-body p-0">
         <ng-container *ngIf="selectedProductPrices">
           <div style="height: 350px;" class="d-flex flex-column w-100">
-              <table class="table table-sm table-border table-hover w-100">
+              <table class="table table-border table-hover w-100">
                 <thead>
                   <tr>
                     <th>
