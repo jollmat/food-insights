@@ -218,17 +218,17 @@
                 <thead>
                   <tr>
                     <th>
-                      <div class="d-flex justify-content-start align-items-center cursor-pointer ps-2" (click)="sortPriceBy('date')">
+                      <div class="d-flex justify-content-center align-items-center cursor-pointer" (click)="sortPriceBy('date')">
                         <span [ngClass]="{'text-underline': sortPriceByField==='date'}">Date</span>
                       </div>
                     </th>
                     <th>
-                      <div class="d-flex justify-content-start align-items-center cursor-pointer ps-3" (click)="sortPriceBy('commerceName')">
+                      <div class="d-flex justify-content-center align-items-center cursor-pointer" (click)="sortPriceBy('commerceName')">
                         <span [ngClass]="{'text-underline': sortPriceByField==='commerceName'}">Commerce</span>
                       </div>
                     </th>
                     <th>
-                      <div class="d-flex justify-content-end align-items-center cursor-pointer pe-3" (click)="sortPriceBy('price')">
+                      <div class="d-flex justify-content-center align-items-center cursor-pointer" (click)="sortPriceBy('price')">
                         <span [ngClass]="{'text-underline': sortPriceByField==='price'}">Price</span>
                       </div>
                     </th>
@@ -238,7 +238,13 @@
                 <tbody>
                   <ng-container *ngFor="let productPrice of selectedProductPrices?.prices">
                     <tr>
-                      <td class="text-start ps-3">{{productPrice.date | date: 'dd.MM.yyyy - HH:mm'}}</td>
+                      <td class="text-start ps-3">
+                        <span *ngIf="deviceType!=='mobile'">{{productPrice.date | date: 'dd.MM.yyyy - HH:mm'}}</span>
+                        <div *ngIf="deviceType==='mobile'" class="d-flex flex-column justify-content-center align-items-center gap-1">
+                          <span>{{productPrice.date | date: 'dd.MM.yyyy'}}</span>
+                          <span>{{productPrice.date | date: 'HH:mm'}}</span>
+                        </div>
+                      </td>
                       <td class="ps-3">{{productPrice.commerceName}}</td>
                       <td class="text-end pe-3">{{productPrice.price | number:'1.2-2'}} €</td>
                       <td class="text-center p-0">
