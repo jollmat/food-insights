@@ -183,21 +183,22 @@
         <h5 class="modal-title capitalize-first">{{selectedProductPrices?.product_name}}</h5>
         <i class="fas fa-close text-light cursor-pointer fs-3" (click)="closeModal();selectedProductPrices=undefined;newProductPrice=undefined;editingProductPrice=undefined;"></i>
       </div>
-      <div class="modal-body p-0">
+      <div class="modal-body p-0" style="overflow:{{(newProductPrice || editingProductPrice)?'visible':'auto'}}">
         <ng-container *ngIf="newProductPrice || editingProductPrice">
           <div class="p-3">
             <ng-container *ngIf="productPriceForm">
               <form [formGroup]="productPriceForm">
-                <div class="row mb-3">
-                  <label for="inputEmail3" class="col-sm-2 col-form-label">Email</label>
+                <div class="row mb-3 d-flex align-items-center">
+                  <label for="inputPrice" class="col-sm-2 col-form-label">Price</label>
                   <div class="col-sm-10">
-                    <input type="number" class="form-control" id="inputEmail3" formControlName="price">
+                    <input type="number" class="form-control" id="inputPrice" formControlName="price">
                   </div>
                 </div>
-                <div class="row mb-3">
-                  <label for="inputPassword3" class="col-sm-2 col-form-label">Password</label>
+                <div class="row mb-3 d-flex align-items-center">
+                  <label for="inputCommerceShop" class="col-sm-2 col-form-label">Commerce</label>
                   <div class="col-sm-10">
                     <ng-select
+                      id="inputCommerceShop"
                       [items]="commerces"
                       bindLabel="name"
                       bindValue="id"
