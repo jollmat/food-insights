@@ -131,6 +131,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.modalInstance = modal;
     //}
     modal.show();
+
+    (modal as any)._handleUpdate = () => {};
   }
 
   async doOpenNewPrice(p: OpenFoodFactsProduct) {
@@ -220,6 +222,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.modalInstance = modal;
     modal.show();
+    (modal as any)._handleUpdate = () => {};
   }
 
   closeModal() {
@@ -340,6 +343,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.modalInstance = modal;
     modal.show();
+    (modal as any)._handleUpdate = () => {};
 
     // Build chart first
     setTimeout(() => {
@@ -654,6 +658,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.modalInstance = modal;
     modal.show();
+    (modal as any)._handleUpdate = () => {};
   }
 
   getProductAttrValue(product: OpenFoodFactsProduct, attributes: string[], alternativeAttributes?: string[]): any {
