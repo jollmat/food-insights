@@ -147,13 +147,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.openProductPrices(p);
 
-    setTimeout(() => {
-      const firstInput = document.querySelector(
-        'form input'
-      ) as HTMLInputElement;
-      firstInput?.focus();
-      firstInput?.select();
-    }, 500);
+    if (this.deviceType!=='mobile') {
+      setTimeout(() => {
+        const firstInput = document.querySelector(
+          'form input'
+        ) as HTMLInputElement;
+          firstInput?.focus();
+          firstInput?.select();
+      }, 500);
+    }
   }
 
   doCreateProductPrice() {
