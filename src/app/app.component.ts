@@ -10,7 +10,6 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { HighchartsChartModule } from 'highcharts-angular';
 import * as Highcharts from 'highcharts';
 import { DeviceService, DeviceType } from './services/device.service';
-import { V } from '@angular/cdk/keycodes';
 
 export type DisplayMode = 'GRID' | 'LIST';
 
@@ -213,7 +212,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async openScanner() {
     const bootstrap = await import('bootstrap');
-    const modal = new bootstrap.Modal(this.scannerModalElement.nativeElement);
+    const modal = new bootstrap.Modal(this.scannerModalElement.nativeElement, {
+      backdrop: 'static',
+      keyboard: false
+    });
     this.modalInstance = modal;
     modal.show();
   }
@@ -330,7 +332,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('viewProduct()', product);
 
     const bootstrap = await import('bootstrap');
-    const modal = new bootstrap.Modal(this.productModalElement.nativeElement);
+    const modal = new bootstrap.Modal(this.productModalElement.nativeElement, {
+      backdrop: 'static',
+      keyboard: false
+    });
     this.modalInstance = modal;
     modal.show();
 
@@ -641,7 +646,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.buildComparatorIngredientsCharts();
 
     const bootstrap = await import('bootstrap');
-    const modal = new bootstrap.Modal(this.comparatorModalElement.nativeElement);
+    const modal = new bootstrap.Modal(this.comparatorModalElement.nativeElement, {
+      backdrop: 'static',
+      keyboard: false
+    });
     this.modalInstance = modal;
     modal.show();
   }
