@@ -112,7 +112,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   ){}
   
   codeChanged(newCode: string) {
-    console.log('codeChanged()', newCode);
     this.barcodeTemp = newCode;
 
     this.selectBarcode();
@@ -122,21 +121,22 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('openProductPrices()', p);
     this.selectedProductPrices = p;
     this.removeProductPriceId = undefined;
-    const bootstrap = await import('bootstrap');
-    const modal = new bootstrap.Modal(this.pricesModalElement.nativeElement, {
-      backdrop: 'static',
-      keyboard: false
-    });
-    //if (!this.modalInstance) {
-      this.modalInstance = modal;
-    //}
-    modal.show();
 
-    (modal as any)._handleUpdate = () => {};
+    if (this.deviceType!=='mobile') {
+      const bootstrap = await import('bootstrap');
+      const modal = new bootstrap.Modal(this.pricesModalElement.nativeElement, {
+        backdrop: 'static',
+        keyboard: false
+      });
+
+      this.modalInstance = modal;
+      modal.show();
+
+      (modal as any)._handleUpdate = () => {};
+    }
   }
 
   async doOpenNewPrice(p: OpenFoodFactsProduct) {
-    console.log('doOpenNewPrice()', p);
     this.newProductPrice = {
       date: new Date(),
       productId: p._id,
@@ -181,12 +181,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   doRemoveProductPrice() {
-    console.log('doRemoveProductPrice()');
     if (this.selectedProductPrices?.prices) {
       this.selectedProductPrices.prices = this.selectedProductPrices.prices.filter((_price) => _price.id!==this.removeProductPriceId);
     }
     this.prices = this.prices.filter((_price) => _price.id!==this.removeProductPriceId);
-    console.log('  - prices', this.prices);
     this.saveProductPricesSubscription = this.openFoodFactsService.saveStoredProductPrices(this.prices).subscribe(() => {
       this.removeProductPriceId = undefined;
       this.fetchPrices();
@@ -195,6 +193,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   editProductPrice(productPriceId: string) {
     this.editingProductPrice = this.selectedProductPrices?.prices?.find((_price) => _price.id === productPriceId);
+    console.group('editProductPrice()', this.editingProductPrice);
     if (this.editingProductPrice) {
       const product: OpenFoodFactsProduct | undefined = this.products.find((_product) => _product.id===this.editingProductPrice?.productId);
       this.productPriceForm = new FormGroup({
@@ -205,7 +204,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   doUpdateProductPrice() {
-    console.log('doUpdateProductPrice()', this.editingProductPrice);
     if (this.editingProductPrice) {
       this.editingProductPrice.commerceId = this.productPriceForm?.get('commerceId')?.value;
       this.editingProductPrice.price = parseFloat(this.productPriceForm?.get('price')?.value);
@@ -226,10 +224,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   closeModal() {
-    // this.modalInstance?.hide();
     setTimeout(() => {
       this.modalInstance?.hide();
-    });
+    }, 200);
   }
 
   toggleScanner() {
@@ -334,8 +331,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async viewProduct(product: OpenFoodFactsProduct) {
     this.selectedProduct = product;
-    console.log('viewProduct()', product);
-
+    
     const bootstrap = await import('bootstrap');
     const modal = new bootstrap.Modal(this.productModalElement.nativeElement, {
       backdrop: 'static',
@@ -363,7 +359,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         )
         .subscribe(value => {
           this.searchtext = value;
-          console.log(this.searchtext);
         });
   }
 
@@ -388,13 +383,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   singleProductNutrimentsAbsRel: 'ABS' | 'REL' = 'ABS';
   toggleSingleProductNutrimentsAbsRel() {
-    console.log('toggleSingleProductNutrimentsAbsRel()');
     this.singleProductNutrimentsAbsRel = (this.singleProductNutrimentsAbsRel==='ABS')?'REL':'ABS';
   }
 
   multipleProductNutrimentsAbsRel: 'ABS' | 'REL' = 'ABS';
   toggleMultipleProductNutrimentsAbsRel() {
-    console.log('toggleMultipleProductNutrimentsAbsRel()');
     this.multipleProductNutrimentsAbsRel = (this.multipleProductNutrimentsAbsRel==='ABS')?'REL':'ABS';
   }
 
@@ -490,7 +483,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private buildProductIngredientsChart() {
-    console.log(this.selectedProduct?.ingredients);
     this.chartOptions.singleProductIngredients.built = false;
     this.chartOptions.singleProductIngredients.options = {
       chart: { type: 'pie', backgroundColor: '#ffffff' },
@@ -603,7 +595,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       })
     };
-    console.log(this.chartOptions.multipleProductNutrimentsPercent);
     this.chartOptions.multipleProductNutrimentsPercent.built = true;
   }
 
@@ -833,20 +824,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   fetchProducts() {
-    console.log(`Fetching products...`);
     this.fetchProductsSubscription = this.openFoodFactsService.fetchStoredProducts().subscribe((_products) => {
       this.infoText = undefined;
       if (_products) {
         this.products = this.getConfiguredProducts(_products);
         this.sortBy(this.sortByField);
-        console.log('Products', this.products);
         this.fetchPrices();
       }
     });
   }
 
   fetchPrices() {
-    console.log(`Fetching prices...`);
     this.fetchProductPricesSubscription = this.openFoodFactsService.fetchStoredProductPrices().subscribe((_prices) => {
       this.prices = _prices || [];
       this.infoText = undefined;
@@ -866,17 +854,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             }
           });
         }
-        console.log('Prices', _prices);
-        console.log('Products & prices', this.products);
       }
     });
-  }
-
-  private log(txt: string, val?: unknown) {
-    this.infoText = txt;
-    if (txt.length>0) {
-      console.log(this.infoText, val);
-    }
   }
 
   ngOnInit(): void {
@@ -885,7 +864,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.fetchCommercesSubscription = this.openFoodFactsService.fetchCommerces().subscribe((_commerces) => {
       this.commerces = _commerces;
-      console.log('Commerces', this.commerces);
     });
     
     this.deviceTypeSubscription = this.deviceService.deviceType$.subscribe((_deviceType) => {
