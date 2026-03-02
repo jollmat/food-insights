@@ -29,15 +29,13 @@ export class OpenFoodFactsService {
   }
 
   fetchStoredProductPrices(): Observable<ProductPrice[]> {
-    /*
     return this.http.get<ProductPrice[]>(`${this.jsonStoragePricesApiUrl}&t=${Date.now()}`).pipe(
       catchError((e) => {
         console.log(e);
         return of([]);
       })
     );
-    */
-    
+    /*
     return of([
       {id: crypto.randomUUID(), commerceId: 'bonpreu', productId: '7613036569927', date: new Date(), price: 8.4},
       {id: crypto.randomUUID(), commerceId: 'eroski', productId: '7613036569927', date: new Date(), price: 8.0},
@@ -52,7 +50,14 @@ export class OpenFoodFactsService {
       {id: crypto.randomUUID(), commerceId: 'eroski', productId: '7613036569927', date: new Date(), price: 8.0},
       {id: crypto.randomUUID(), commerceId: 'aldi', productId: '7613036569927', date: new Date(), price: 9.3}
     ]);
-    
+    */
+  }
+
+  saveStoredProductPrices(prices: ProductPrice[]): Observable<boolean> {
+    return this.http.put<ProductPrice[]>(`${this.jsonStoragePricesApiUrl}&t=${Date.now()}`, prices).pipe(
+      map(() => true),
+      catchError(() => of(false))
+    );
   }
 
   /**

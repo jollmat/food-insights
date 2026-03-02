@@ -1,8 +1,8 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, Signal, signal, ViewChild } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { BarcodeScannerComponent } from "./components/barcode-scanner/barcode-scanner.component";
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { OpenFoodFactsService } from './services/open-food-facts.service';
 import { Commerce, OpenFoodFactsProduct, ProductPrice } from './model/interfaces/open-food-facts-product.interface';
 import { debounceTime, distinctUntilChanged, fromEvent, map, min, Subscription } from 'rxjs';
@@ -10,13 +10,14 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { HighchartsChartModule } from 'highcharts-angular';
 import * as Highcharts from 'highcharts';
 import { DeviceService, DeviceType } from './services/device.service';
+import { V } from '@angular/cdk/keycodes';
 
 export type DisplayMode = 'GRID' | 'LIST';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, BarcodeScannerComponent, FormsModule, NgSelectModule, HighchartsChartModule],
+  imports: [CommonModule, BarcodeScannerComponent, FormsModule, NgSelectModule, HighchartsChartModule, ReactiveFormsModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -29,7 +30,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('productModal') productModalElement!: ElementRef<HTMLDivElement>;
   @ViewChild('comparatorModal') comparatorModalElement!: ElementRef<HTMLDivElement>;
   @ViewChild('pricesModal') pricesModalElement!: ElementRef<HTMLDivElement>;
-  modalInstance: any;
+  modalInstance?: bootstrap.Modal;
 
   infoText?: string;
 
@@ -59,6 +60,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   fetchProductsSubscription?: Subscription;
   saveProductsSubscription?: Subscription;
   fetchProductPricesSubscription?: Subscription;
+  saveProductPricesSubscription?: Subscription;
   fetchCommercesSubscription?: Subscription;
   openFoodFactsLoadProductSubscription?: Subscription;
   
@@ -99,7 +101,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     multipleProductNutrimentsPercent: { options: {}, built: false }
   };
 
+  prices: ProductPrice[] = [];
   newProductPrice?: ProductPrice;
+  productPriceForm?: FormGroup;
+  removeProductPriceId?: string;
+  editingProductPrice?: ProductPrice;
 
   constructor(
     private readonly openFoodFactsService: OpenFoodFactsService,
@@ -116,12 +122,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   async openProductPrices(p: OpenFoodFactsProduct) {
     console.log('openProductPrices()', p);
     this.selectedProductPrices = p;
+    this.removeProductPriceId = undefined;
     const bootstrap = await import('bootstrap');
     const modal = new bootstrap.Modal(this.pricesModalElement.nativeElement, {
       backdrop: 'static',
       keyboard: false
     });
-    this.modalInstance = modal;
+    //if (!this.modalInstance) {
+      this.modalInstance = modal;
+    //}
     modal.show();
   }
 
@@ -129,9 +138,77 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('doOpenNewPrice()', p);
     this.newProductPrice = {
       date: new Date(),
+      productId: p._id,
+      commerceId: undefined,
       price: 0
     };
+    this.productPriceForm = new FormGroup({
+      price: new FormControl(this.newProductPrice.price, [Validators.required]),
+      commerceId: new FormControl(this.commerces[0].id, [Validators.required])
+    });
     this.openProductPrices(p);
+
+    setTimeout(() => {
+      const firstInput = document.querySelector(
+        'form input'
+      ) as HTMLInputElement;
+      firstInput?.focus();
+      firstInput?.select();
+    }, 500);
+  }
+
+  doCreateProductPrice() {
+    if(this.productPriceForm && this.newProductPrice && this.selectedProductPrices) {
+      this.newProductPrice.id = crypto.randomUUID();
+      this.newProductPrice.commerceId = this.productPriceForm.get('commerceId')?.value;
+      this.newProductPrice.price = parseFloat(this.productPriceForm.get('price')?.value);
+
+      this.prices.push(this.newProductPrice);
+
+      this.openFoodFactsService.saveStoredProductPrices(this.prices).subscribe(() => {
+        this.fetchPrices();
+      });
+
+      this.closeModal();
+    }
+  }
+
+  removeProductPrice(productPriceId: string) {
+    this.removeProductPriceId = productPriceId;
+  }
+
+  doRemoveProductPrice() {
+    console.log('doRemoveProductPrice()');
+    if (this.selectedProductPrices?.prices) {
+      this.selectedProductPrices.prices = this.selectedProductPrices.prices.filter((_price) => _price.id!==this.removeProductPriceId);
+    }
+    this.prices = this.prices.filter((_price) => _price.id!==this.removeProductPriceId);
+    console.log('  - prices', this.prices);
+    this.saveProductPricesSubscription = this.openFoodFactsService.saveStoredProductPrices(this.prices).subscribe(() => {
+      this.removeProductPriceId = undefined;
+      this.fetchPrices();
+    });
+  }
+
+  editProductPrice(productPriceId: string) {
+    this.editingProductPrice = this.selectedProductPrices?.prices?.find((_price) => _price.id === productPriceId);
+    if (this.editingProductPrice) {
+      const product: OpenFoodFactsProduct | undefined = this.products.find((_product) => _product.id===this.editingProductPrice?.productId);
+      this.productPriceForm = new FormGroup({
+        price: new FormControl(this.editingProductPrice.price, [Validators.required]),
+        commerceId: new FormControl(this.editingProductPrice.commerceId, [Validators.required])
+      });
+    }
+  }
+
+  doUpdateProductPrice() {
+    console.log('doUpdateProductPrice()', this.editingProductPrice);
+    if (this.editingProductPrice) {
+      this.editingProductPrice.commerceId = this.productPriceForm?.get('commerceId')?.value;
+      this.editingProductPrice.price = parseFloat(this.productPriceForm?.get('price')?.value);
+    }
+    this.editingProductPrice = undefined;
+    this.saveProductPricesSubscription = this.openFoodFactsService.saveStoredProductPrices(this.prices).subscribe();
   }
 
   async openScanner() {
@@ -142,7 +219,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   closeModal() {
-    this.modalInstance?.hide();
+    // this.modalInstance?.hide();
+    setTimeout(() => {
+      this.modalInstance?.hide();
+    });
   }
 
   toggleScanner() {
@@ -221,18 +301,28 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.productFound && !this.products.some((_product) => _product._id===this.productFound?._id)) {
       this.products.push(this.productFound);
       //localStorage.setItem(this.STORED_PRODUCTS_LS_KEY, JSON.stringify(this.products));
-      this.saveProductsSubscription = this.openFoodFactsService.saveStoredProducts(this.products).subscribe((saved) => {
-        this.toggleScanner();
-        this.productFound = undefined;
-        this.barcode = '';
-      });
+      this.toggleScanner();
+      this.productFound = undefined;
+      this.barcode = '';
+      this.updateProducts();
     }
+  }
+
+  updateProducts() {
+    this.saveProductsSubscription = this.openFoodFactsService.saveStoredProducts(this.products).subscribe((saved) => {});
   }
 
   removeProduct(productId: string) {
     this.products = this.products.filter((_product) => _product._id!==productId);
     //localStorage.setItem(this.STORED_PRODUCTS_LS_KEY, JSON.stringify(this.products));
     this.saveProductsSubscription = this.openFoodFactsService.saveStoredProducts(this.products).subscribe(() => {});
+
+    if (this.prices && this.prices.some((_price) => _price.productId===productId)) {
+      this.prices = this.prices.filter((_price) => _price.productId!==productId);
+      this.saveProductPricesSubscription = this.openFoodFactsService.saveStoredProductPrices(this.prices).subscribe(() => {
+        this.fetchPrices();
+      });
+    }
   }
 
   async viewProduct(product: OpenFoodFactsProduct) {
@@ -728,7 +818,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   fetchProducts() {
-    this.infoText = `Fetching products...`;
+    console.log(`Fetching products...`);
     this.fetchProductsSubscription = this.openFoodFactsService.fetchStoredProducts().subscribe((_products) => {
       this.infoText = undefined;
       if (_products) {
@@ -741,8 +831,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   fetchPrices() {
-    this.infoText = `Fetching prices...`;
+    console.log(`Fetching prices...`);
     this.fetchProductPricesSubscription = this.openFoodFactsService.fetchStoredProductPrices().subscribe((_prices) => {
+      this.prices = _prices || [];
       this.infoText = undefined;
       if (_prices && _prices.length>0) {
         if (this.products) {
@@ -764,6 +855,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         console.log('Products & prices', this.products);
       }
     });
+  }
+
+  private log(txt: string, val?: unknown) {
+    this.infoText = txt;
+    if (txt.length>0) {
+      console.log(this.infoText, val);
+    }
   }
 
   ngOnInit(): void {
@@ -793,5 +891,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.saveProductsSubscription?.unsubscribe();
     this.fetchProductPricesSubscription?.unsubscribe();
     this.fetchCommercesSubscription?.unsubscribe();
+    this.saveProductPricesSubscription?.unsubscribe();
   }
 }

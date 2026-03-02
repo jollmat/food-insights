@@ -208,6 +208,7 @@ ul {
 .modal-content {
     &.mobile {
         width: 100%;
+        height: calc(100vh);
         border-radius: 0px;
     }
 }
@@ -290,8 +291,9 @@ ul {
     background-color: #ffffff;
 }
 
-.badge.rounded-pill.bg-light.price {
+.badge.price {
     border: 1px solid rgba(0, 0, 0, 0.15) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     cursor: pointer;
+    font-weight: 500;
 }
