@@ -85,8 +85,8 @@
     <div class="d-flex flex-column w-100 flex-wrap justify-content-start w-100 p-3 products-container" *ngIf="products.length>0" [ngClass]="{'semi-transparent': scannerOn()}">
 
       <div class="d-flex flex-wrap justify-content-start w-100 gap-2">
-        <ng-container *ngIf="infoText && infoText.length>0">
-          <div class="badge badge-info p-2 d-flex w-100">{{infoText}}</div>
+        <ng-container *ngIf="!jsonStorageApiOn()">
+          <div class="alert alert-warning p-2 d-flex w-100">JSON Api daily requests limit reached. Local storage mode enabled</div>
         </ng-container>
         <ng-container *ngFor="let p of products">
           <ng-container [ngTemplateOutlet]="productCard" [ngTemplateOutletContext]="{p}"></ng-container>
@@ -280,12 +280,12 @@
         <button class="btn btn-secondary" (click)="closeModal();selectedProductPrices=undefined;newProductPrice=undefined;editingProductPrice=undefined;">Close</button>
 
         <ng-container *ngIf="newProductPrice">
-          <button class="btn btn-light" [disabled]="productPriceForm?.disabled" (click)="closeModal();selectedProductPrices=undefined;newProductPrice=undefined">Cancel</button>
-          <button class="btn btn-danger" [disabled]="productPriceForm?.disabled" (click)="doCreateProductPrice()">Create</button>
+          <button class="btn btn-light" (click)="closeModal();selectedProductPrices=undefined;newProductPrice=undefined">Cancel</button>
+          <button class="btn btn-danger" [disabled]="productPriceForm?.invalid" (click)="doCreateProductPrice()">Create</button>
         </ng-container>
         <ng-container *ngIf="editingProductPrice">
-          <button class="btn btn-light" [disabled]="productPriceForm?.disabled" (click)="editingProductPrice=undefined">Cancel</button>
-          <button class="btn btn-danger" [disabled]="productPriceForm?.disabled" (click)="doUpdateProductPrice()">Save</button>
+          <button class="btn btn-light" (click)="editingProductPrice=undefined">Cancel</button>
+          <button class="btn btn-danger" [disabled]="productPriceForm?.invalid" (click)="doUpdateProductPrice()">Save</button>
         </ng-container>
       </div>
     </div>

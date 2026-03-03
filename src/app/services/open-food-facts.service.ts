@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, catchError, of } from 'rxjs';
+import { Observable, map, catchError, of, BehaviorSubject } from 'rxjs';
 import { Commerce, OpenFoodFactsProduct, ProductPrice } from '../model/interfaces/open-food-facts-product.interface';
 
 @Injectable({
@@ -13,38 +13,15 @@ export class OpenFoodFactsService {
   private jsonStoragePricesApiUrl = `https://api.jsonstorage.net/v1/json/a194f6bb-6aa4-43f3-b7c7-888b963187b2/c6da72a6-b8b0-4790-9556-1fe6fb84d5dc?apiKey=${this.jsonStorageApiKey}`;
   private jsonStorageCommercesApiUrl = `https://api.jsonstorage.net/v1/json/a194f6bb-6aa4-43f3-b7c7-888b963187b2/61924688-bde2-4fb8-8d55-62d1cae4f958?apiKey=${this.jsonStorageApiKey}`;
 
+  private APP_FOOD_INSIGHTS_PRODUCTS = 'APP_FOOD_INSIGHTS_PRODUCTS';
+  private APP_FOOD_INSIGHTS_PRICES = 'APP_FOOD_INSIGHTS_PRICES';
+  private APP_FOOD_INSIGHTS_COMMERCES = 'APP_FOOD_INSIGHTS_COMMERCES';
+
+  jsonStorageApiOn$ = new BehaviorSubject<boolean>(true);
+
   constructor(private http: HttpClient) {}
 
-  fetchCommerces(): Observable<Commerce[]> {
-    return this.http.get<Commerce[]>(`${this.jsonStorageCommercesApiUrl}&t=${Date.now()}`).pipe(
-      map((_commerces) => {
-        console.log(_commerces);
-        return _commerces;
-      }),
-      catchError((e) => {
-        console.log(e);
-        return of([]);
-      })
-    );
-  }
-
-  fetchStoredProductPrices(): Observable<ProductPrice[]> {
-    return this.http.get<ProductPrice[]>(`${this.jsonStoragePricesApiUrl}&t=${Date.now()}`).pipe(
-      catchError((e) => {
-        console.log(e);
-        return of([]);
-      })
-    );
-  }
-
-  saveStoredProductPrices(prices: ProductPrice[]): Observable<boolean> {
-    return this.http.put<ProductPrice[]>(`${this.jsonStoragePricesApiUrl}&t=${Date.now()}`, prices).pipe(
-      map(() => true),
-      catchError(() => of(false))
-    );
-  }
-
-  /**
+    /**
    * Fetch food product details by barcode
    * @param code Barcode (EAN, UPC, etc.)
    */
@@ -53,24 +30,116 @@ export class OpenFoodFactsService {
     return this.http.get<any>(url).pipe(
       map((res) => res.status === 1 ? this.getSimplifiedProduct(res.product as OpenFoodFactsProduct) : undefined),
       catchError((e) => {
-        console.log(e);
         return of(undefined);
       })
     );
   }
 
-  fetchStoredProducts(): Observable<OpenFoodFactsProduct[]> {
-    return this.http.get<OpenFoodFactsProduct[]>(`${this.jsonStorageProductsApiUrl}&t=${Date.now()}`).pipe(
-      map((_products) => _products.map((_product) => this.getSimplifiedProduct(_product))),
-      catchError(() => of([]))
-    );
+  fetchCommerces(fromLocalStorage = false): Observable<Commerce[]> {
+    if (fromLocalStorage) {
+      const storedData = localStorage.getItem(this.APP_FOOD_INSIGHTS_COMMERCES);
+      let res = [];
+      if (storedData) {
+        res = JSON.parse(storedData);
+      }
+      return of (res);
+    } else {
+      return this.http.get<Commerce[]>(`${this.jsonStorageCommercesApiUrl}&t=${Date.now()}`).pipe(
+        map((_commerces) => {
+          localStorage.setItem(this.APP_FOOD_INSIGHTS_COMMERCES, JSON.stringify(_commerces));
+          return _commerces;
+        }),
+        catchError((e) => {
+          return this.fetchCommerces(true);
+        })
+      );
+    }
   }
 
-  saveStoredProducts(products: OpenFoodFactsProduct[]): Observable<boolean> {
-    return this.http.put<OpenFoodFactsProduct[]>(`${this.jsonStorageProductsApiUrl}&t=${Date.now()}`, products.map((_product) => this.getSimplifiedProduct(_product))).pipe(
-      map(() => true),
-      catchError(() => of(false))
-    );
+  fetchStoredProductPrices(fromLocalStorage = false): Observable<ProductPrice[]> {
+    if (fromLocalStorage) {
+      const storedData = localStorage.getItem(this.APP_FOOD_INSIGHTS_PRICES);
+      let res = [];
+      if (storedData) {
+        res = JSON.parse(storedData);
+      }
+      return of (res);
+    } else {
+      return this.http.get<ProductPrice[]>(`${this.jsonStoragePricesApiUrl}&t=${Date.now()}`).pipe(
+        map((_prices) => {
+          localStorage.setItem(this.APP_FOOD_INSIGHTS_PRICES, JSON.stringify(_prices));
+          return _prices;
+        }),
+        catchError((e) => {
+          return this.fetchStoredProductPrices(true);
+        })
+      );
+    }
+  }
+
+  fetchStoredProducts(fromLocalStorage = false): Observable<OpenFoodFactsProduct[]> {
+    if (fromLocalStorage) {
+      const storedData = localStorage.getItem(this.APP_FOOD_INSIGHTS_PRODUCTS);
+      let res = [];
+      if (storedData) {
+        res = JSON.parse(storedData);
+      }
+      return of (res);
+    } else {
+      this.jsonStorageApiOn$.next(true);
+      return this.http.get<OpenFoodFactsProduct[]>(`${this.jsonStorageProductsApiUrl}&t=${Date.now()}`).pipe(
+        map((_products) => { 
+          const simplifiedProducts: OpenFoodFactsProduct[] = _products.map((_product) => {
+            return this.getSimplifiedProduct(_product);
+          });
+          localStorage.setItem(this.APP_FOOD_INSIGHTS_PRODUCTS, JSON.stringify(simplifiedProducts));
+          return simplifiedProducts;
+        }),
+        catchError((e) => {
+          this.jsonStorageApiOn$.next(false);
+          return this.fetchStoredProducts(true);
+        })
+      );
+    }
+  }
+
+  saveStoredProducts(products: OpenFoodFactsProduct[], fromLocalStorage = false): Observable<boolean> {
+    localStorage.setItem(this.APP_FOOD_INSIGHTS_PRODUCTS, JSON.stringify(products));
+    if (!fromLocalStorage && !this.jsonStorageApiOn$.getValue()) {
+      return this.saveStoredProducts(products, true);
+    }
+    if (fromLocalStorage) {
+      localStorage.setItem(this.APP_FOOD_INSIGHTS_PRODUCTS, JSON.stringify(products.map((_product) => this.getSimplifiedProduct(_product))));
+      return of (true);
+    } else {
+      return this.http.put<OpenFoodFactsProduct[]>(`${this.jsonStorageProductsApiUrl}&t=${Date.now()}`, products.map((_product) => this.getSimplifiedProduct(_product))).pipe(
+        map(() => {
+          localStorage.setItem(this.APP_FOOD_INSIGHTS_PRODUCTS, JSON.stringify(products.map((_product) => this.getSimplifiedProduct(_product))));
+          return true;
+        }),
+        catchError((e) => {
+          return this.saveStoredProducts(products, true);
+        })
+      );
+    }
+  }
+
+  saveStoredProductPrices(prices: ProductPrice[], fromLocalStorage = false): Observable<boolean> {
+    localStorage.setItem(this.APP_FOOD_INSIGHTS_PRICES, JSON.stringify(prices));
+    if (!fromLocalStorage && !this.jsonStorageApiOn$.getValue()) {
+      return this.saveStoredProductPrices(prices, true);
+    }
+    if (fromLocalStorage) {
+      localStorage.setItem(this.APP_FOOD_INSIGHTS_PRICES, JSON.stringify(prices));
+      return of (true);
+    } else {
+      return this.http.put<ProductPrice[]>(`${this.jsonStoragePricesApiUrl}&t=${Date.now()}`, prices).pipe(
+        map(() => true),
+        catchError((e) => {
+          return this.saveStoredProductPrices(prices, true);
+        })
+      );
+    }
   }
 
   private getSimplifiedProduct(product: OpenFoodFactsProduct): OpenFoodFactsProduct {

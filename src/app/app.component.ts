@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { BarcodeScannerComponent } from "./components/barcode-scanner/barcode-scanner.component";
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { OpenFoodFactsService } from './services/open-food-facts.service';
 import { Commerce, OpenFoodFactsProduct, ProductPrice } from './model/interfaces/open-food-facts-product.interface';
@@ -31,10 +31,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('pricesModal') pricesModalElement!: ElementRef<HTMLDivElement>;
   modalInstance?: bootstrap.Modal;
 
-  infoText?: string;
-
   deviceType!: DeviceType;
   displayMode: DisplayMode = 'GRID';
+
+  jsonStorageApiOn = signal(true);
 
   deviceTypeSubscription?: Subscription;
 
@@ -54,6 +54,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   //Search
   searchtext = '';
 
+  jsonStorageApiOnSubscription?: Subscription;
   barcodeInputDebounceSubscription?: Subscription;
   searchInputDebounceSubscription?: Subscription;
   fetchProductsSubscription?: Subscription;
@@ -113,8 +114,16 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   
   codeChanged(newCode: string) {
     this.barcodeTemp = newCode;
-
     this.selectBarcode();
+  }
+
+  // Custom validator
+  greaterThanZeroValidator(control: AbstractControl) {
+    const value = control.value;
+    if (value !== null && value <= 0) {
+      return { greaterThanZero: true }; // validation failed
+    }
+    return null; // valid
   }
 
   async openProductPrices(p: OpenFoodFactsProduct) {
@@ -144,7 +153,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       price: 0
     };
     this.productPriceForm = new FormGroup({
-      price: new FormControl(this.newProductPrice.price, [Validators.required]),
+      price: new FormControl(this.newProductPrice.price, [Validators.required, this.greaterThanZeroValidator]),
       commerceId: new FormControl(this.commerces[0].id, [Validators.required])
     });
     this.openProductPrices(p);
@@ -170,6 +179,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.openFoodFactsService.saveStoredProductPrices(this.prices).subscribe(() => {
         this.fetchPrices();
+        this.newProductPrice = undefined;
       });
 
       this.closeModal();
@@ -197,7 +207,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.editingProductPrice) {
       const product: OpenFoodFactsProduct | undefined = this.products.find((_product) => _product.id===this.editingProductPrice?.productId);
       this.productPriceForm = new FormGroup({
-        price: new FormControl(this.editingProductPrice.price, [Validators.required]),
+        price: new FormControl(this.editingProductPrice.price, [Validators.required, this.greaterThanZeroValidator]),
         commerceId: new FormControl(this.editingProductPrice.commerceId, [Validators.required])
       });
     }
@@ -825,7 +835,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   fetchProducts() {
     this.fetchProductsSubscription = this.openFoodFactsService.fetchStoredProducts().subscribe((_products) => {
-      this.infoText = undefined;
       if (_products) {
         this.products = this.getConfiguredProducts(_products);
         this.sortBy(this.sortByField);
@@ -837,7 +846,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   fetchPrices() {
     this.fetchProductPricesSubscription = this.openFoodFactsService.fetchStoredProductPrices().subscribe((_prices) => {
       this.prices = _prices || [];
-      this.infoText = undefined;
+      console.log('fetchPrices()', this.prices);
       if (_prices && _prices.length>0) {
         if (this.products) {
           _prices.forEach((_price) => {
@@ -851,6 +860,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
                 product.prices = [_price];
               }
               product.prices = product?.prices?.sort((a,b) => a.price>b.price?1:-1 );
+              if (this.selectedProductPrices?._id === product._id) {
+                console.log(this.selectedProductPrices.prices, product.prices);
+              }
             }
           });
         }
@@ -859,6 +871,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+
+    this.jsonStorageApiOnSubscription = this.openFoodFactsService.jsonStorageApiOn$.subscribe((_on) => {
+      console.log('jsonStorageApiOnSubscription changed', _on);
+      this.jsonStorageApiOn.set(_on);
+    });
 
     this.fetchProducts();
 
@@ -877,6 +894,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.jsonStorageApiOnSubscription?.unsubscribe();
     this.openFoodFactsLoadProductSubscription?.unsubscribe();
     this.barcodeInputDebounceSubscription?.unsubscribe();
     this.searchInputDebounceSubscription?.unsubscribe();
