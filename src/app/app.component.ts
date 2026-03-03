@@ -217,9 +217,19 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.editingProductPrice) {
       this.editingProductPrice.commerceId = this.productPriceForm?.get('commerceId')?.value;
       this.editingProductPrice.price = parseFloat(this.productPriceForm?.get('price')?.value);
+
+      const commerce = this.commerces.find((_commerce) => _commerce.id===this.editingProductPrice?.commerceId);
+      this.editingProductPrice.commerceName = commerce ? commerce.name : undefined;
+
+      this.prices.forEach((_price) => {
+        if (_price.id===this.editingProductPrice?.id) {
+          _price.commerceId = this.editingProductPrice?.commerceId;
+          _price.commerceName = this.editingProductPrice?.commerceName;
+          _price.price = this.editingProductPrice?.price || 0;
+        }
+      });
     }
-    this.editingProductPrice = undefined;
-    this.saveProductPricesSubscription = this.openFoodFactsService.saveStoredProductPrices(this.prices).subscribe();
+    this.saveProductPricesSubscription = this.openFoodFactsService.saveStoredProductPrices(this.prices).subscribe(() => this.editingProductPrice = undefined);
   }
 
   async openScanner() {
